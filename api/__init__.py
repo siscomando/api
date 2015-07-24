@@ -36,12 +36,15 @@ import os
 from eve.auth import BasicAuth
 from eve import Eve
 from werkzeug.security import check_password_hash
-from eve_mongoengine import EveMongoengine
 from flask import abort
-from siscomando import models
+from pymongo import MongoClient
+from bson import ObjectId
+# app
 from api.hooks import users_hooks
 import settings
 
+conn = MongoClient()
+database = conn[settings.MONGO_DBNAME]
 
 class ApiBasicAuth(BasicAuth):
 	def check_auth(self, username, password, allowed_roles, resources, method):
@@ -50,13 +53,11 @@ class ApiBasicAuth(BasicAuth):
 
 		if allowed_roles:
 			# only retrieve a user if his roles match
-			# DEBUG purpose
-
 			lookup['roles'] = {'$in': allowed_roles}
 
 		print "===== allowed_roles ===== "
 		roles_is = allowed_roles if allowed_roles else "VAZIO"
-		print allowed_roles, roles_is
+		print roles_is
 		account = accounts.find_one(lookup) # Query here
 		print account
 
@@ -68,7 +69,18 @@ class ApiBasicAuth(BasicAuth):
 		# set 'auth_field' value to owners documents.
 		if account and '_id' in account:
 			self.set_request_auth_value(account['_id'])
-		return account and check_password_hash(account['password'], password)
+
+		if account:
+			if check_password_hash(account['password'], password):
+				return True
+			else:
+				abort(401,
+				description="Please provide proper credentials (authentication)")
+		else:
+			# This will to raise: 'Please provide proper credentials'. That can
+			# to be i. user not exists, ii. roles not macth or
+			# iii. password invalid.
+			return False
 
 # to export EVE_SETTING with path
 # In the terminal:
@@ -77,8 +89,8 @@ EVE_SETTINGS = os.environ.get('EVE_SETTINGS')
 app = Eve(auth=ApiBasicAuth, settings=EVE_SETTINGS)
 
 # Adding hooks
-app.on_pre_POST += users_hooks['username']
-
+app.on_pre_POST_users += users_hooks['set_username']
+app.on_post_POST_users += users_hooks['set_owner']
 
 if __name__ == '__main__':
 	app.run(threaded=True)

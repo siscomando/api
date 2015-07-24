@@ -13,8 +13,14 @@ DOMAIN = {
         },
         'cache_control': '', # account cache is not needs.
         'cache_expires': 0,
-        'resource_methods': ['GET', 'POST'],
+        'resource_methods': ['GET', 'POST', 'DELETE'],
+        'item_methods': ['GET', 'DELETE', 'PATCH'],
         'schema': users_schema, # EVEMongoengine?
+        'allowed_read_roles': ['users', 'superusers'],
+        'allowed_item_read_roles': ['users', 'superusers'],
+        'allowed_item_write_roles': ['superusers'],
         'allowed_write_roles': ['superusers'],
+        'extra_response_fields': ['email'],
+         # 'auth_field': 'owner', # bomb to backend
     },
 }

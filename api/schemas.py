@@ -8,6 +8,7 @@ users_schema = {
 		'type': 'string',
 		'required': True,
 		'unique': True,
+		'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
 	},
 	'first_name': {
 		'type': 'string',
@@ -25,9 +26,10 @@ users_schema = {
 		'type': 'string',
 		'maxlength': 25,
 	},
-	#'username': { See hooks
-	#	'type': 'string',
-	#}
+	'username': { # See hooks
+		'type': 'string',
+		'unique': True
+	},
 	'avatar': {
 		'type': 'string'
 	},
@@ -36,6 +38,15 @@ users_schema = {
 		'allowed': ['users', 'admins', 'superusers'],
 		'default': ['users'],
 	},
+	'owner': {
+		'type': 'string',
+		'readonly': True
+	},
+	'md5_email': {
+		'type': 'string',
+		'readonly': True,
+		'default': 'empty'
+	}
 }
 issues_schema = {
 	'title': {
