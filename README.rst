@@ -17,16 +17,17 @@ Install
    1. Create virutalenv
 
 .. code-block::
-
       $ virtualenv siscomando_api
       $ cd siscomando_api/
       $ source bin/activate
 ::
+
    2. Download API
-   ```
+.. code-block::
       $ git clone https://github.com/siscomando/api.git
       $ cd api/
-  ```
+::
+ 
   3. Install Requirements Libs
   ```
       $ pip install -r requirements.txt
