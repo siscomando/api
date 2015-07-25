@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask.ext.script import Manager, Server, Command, Option, Shell
+from werkzeug.security import generate_password_hash
 #APP
 from api import app
 
@@ -44,11 +45,19 @@ class GunicornServer(Command):
 
 
 manager = Manager(app)
+
+@manager.command
+def addsuperuser():
+	password = generate_password_hash('123')
+	accounts = app.data.driver.db['user']
+	accounts.insert({'email':'s@super.com', 'password': password,
+					'roles': ['superusers']})
+	print "The s@super.com:123 was created. You can change it later."
+
 # `runserver_sync` runs the server as develop mode from flask.
 manager.add_command('runserver_sync', Server(host='127.0.0.1', port=9014))
 # `runserver` runs the server of the WebApp for production behavior.
 manager.add_command('runserver', GunicornServer())
-
 
 if __name__ == '__main__':
 	# IOLoop.instance().start()

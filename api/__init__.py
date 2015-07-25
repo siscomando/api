@@ -32,6 +32,15 @@
 # Client Errors
 # =====================
 #
+# Features
+# =========
+# This application supports stream, messages, etc
+# TODO: 1) Entender documents
+# TODO: 2) DOCUMENTAR install, etc...
+# TODO: 3) Documentar API like iugu.com
+# TODO: 4) Document iugu-python
+
+# -*- coding: utf-8 -*-
 import os
 from eve.auth import BasicAuth
 from eve import Eve
@@ -86,6 +95,9 @@ class ApiBasicAuth(BasicAuth):
 # In the terminal:
 # $ export EVE_SETTINGS=/path/to/settings/from/api/settings.py
 EVE_SETTINGS = os.environ.get('EVE_SETTINGS')
+if EVE_SETTINGS is None:
+	raise TypeError(u'Environment variable EVE_SETTINGS is not defined.' \
+						'Please to define it.')
 app = Eve(auth=ApiBasicAuth, settings=EVE_SETTINGS)
 
 # Adding hooks
