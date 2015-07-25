@@ -16,10 +16,12 @@ Install
 -------------
    1. Create virutalenv
 
-.. code-block:: bash
-    $ virtualenv siscomando_api
-    $ cd siscomando_api/
-    $ source bin/activate
+.. code-block::
+
+      $ virtualenv siscomando_api
+      $ cd siscomando_api/
+      $ source bin/activate
+
 
    2. Download API
    ```
