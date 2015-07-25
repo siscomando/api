@@ -1,10 +1,10 @@
 SisComando API
 ==============
 
-The RESTful API for [SisComando WebApp](https://github.com/siscomando/webapp). This API uses
-[python-eve](http://python-eve.org/) a Python REST API Framework. It work fine with MongoDB
+The RESTful API for `SisComando WebApp <https://github.com/siscomando/webapp>`_. This API uses
+`python-eve <http://python-eve.org/>`_ a Python REST API Framework. It work fine with MongoDB
 where we're using it. But you can use relational-SQL data model see
-[eve-sqlalchemy](http://eve-sqlalchemy.readthedocs.org/en/stable/).
+`eve-sqlalchemy <http://eve-sqlalchemy.readthedocs.org/en/stable/>`_.
 
 Requirements
 -------------
@@ -58,11 +58,15 @@ By default all requests must be authenticated. You needs to create at least one
 user to access/request data from API.
 
 1. Adding superuser
+::
+
  # Inside api/ (parent) and with virtualenv activated
  $ python manage.py addsuperuser
  The s@super.com:123 was created. You can change it later.
 
-2. Test it:
+2. Test it
+::
+
  $ curl -H "Content-Type: application/json" -u 's@super.com:123' \
  http://localhost:9014/api/v2/users
  {"_items": [{"roles": ["superusers"], ... , "email": "s@super.com"}]}
