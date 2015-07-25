@@ -21,8 +21,7 @@ Install
       $ virtualenv siscomando_api
       $ cd siscomando_api/
       $ source bin/activate
-
-
+::
    2. Download API
    ```
       $ git clone https://github.com/siscomando/api.git
