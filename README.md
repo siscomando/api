@@ -16,18 +16,18 @@ Install
 ========
    1. Create virutalenv:
    ```
-      $ virtualenv siscomando 
-      $ cd siscomando/ 
-      $ source bin/activate 
+        $ virtualenv siscomando
+        $ cd siscomando/ 
+        $ source bin/activate 
    ```
    2. Download API
    ```
-      $ git clone https://github.com/siscomando/api.git 
-      $ cd api/ 
+        $ git clone https://github.com/siscomando/api.git 
+        $ cd api/ 
   ```
   3. Install Requirements Libs
   ```
-      $ pip install -r requirements.txt
+        $ pip install -r requirements.txt
   ```
   4. To change `settings.py` if necessary. (e.g: database name, etc)
   5. Exports EVE_SETTINGS as environment variable:
