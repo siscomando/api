@@ -15,11 +15,11 @@ Requirements
 Install
 ========
   1. Create virutalenv
-   ```
-        $ virtualenv siscomando
-        $ cd siscomando/ 
-        $ source bin/activate 
-   ```
+ ```
+  $ virtualenv siscomando
+  $ cd siscomando/ 
+  $ source bin/activate 
+ ```
   2. Download API
    ```
         $ git clone https://github.com/siscomando/api.git 
