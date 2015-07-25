@@ -1,10 +1,10 @@
 SisComando API
 ==============
 
-The RESTful API for (SisComando WebApp)[https://github.com/siscomando/webapp]. This API uses
-(python-eve)[http://python-eve.org/] a Python REST API Framework. It work fine with MongoDB
+The RESTful API for [SisComando WebApp](https://github.com/siscomando/webapp). This API uses
+[python-eve](http://python-eve.org/) a Python REST API Framework. It work fine with MongoDB
 where we're using it. But you can use relational-SQL data model see
-(eve-sqlalchemy)[http://eve-sqlalchemy.readthedocs.org/en/stable/].
+[eve-sqlalchemy](http://eve-sqlalchemy.readthedocs.org/en/stable/).
 
 Requirements
 =============
