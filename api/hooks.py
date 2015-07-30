@@ -11,6 +11,29 @@ from werkzeug.security import generate_password_hash
 import api
 
 
+def before_on_insert_issue(items):
+    """
+    This action normalize the register number removing slash ('/') and
+    copy the original data to field register_orig. This works with one or
+    bulk inserts.
+    """
+    for i in items:
+        i['register_orig'] = i['register']
+        i['register'] = i['register'].replace('/', '')
+
+def before_returning_items_from_me(response):
+    """
+    """
+    output = response['_items'][0]
+
+    # cleaner and keeping id
+    for k, v in response.items():
+        del(response[k])
+
+    for k, v in output.items():
+        response[k] = v
+
+
 def pre_post_users(request):
     """Adds at the body data that was send by user's API the `username`
     field. The username is the localpart from email address."""
@@ -30,19 +53,22 @@ def post_post_users(request, payload):
     """ Sets the field `owner` with _id of the user recently created. This is a
     workaround due at `auth_field` when setted to `_id` to receive the
     superuser's _id when to create or edit the user.
+
+    ::Explanation::
+    Only `superusers` roles can create a new user. With Eve framework is possible
+    to use `auth_field` feature to add an author for document created. But we
+    wants that the `auth_field` of the `User` model be the `_id` of the
+    recently user created instead superuser.
     """
     if payload.status_code == 201:
         accounts = api.database.user
-        print "MONGO ACCOUNT DB USER:", accounts
         # recently created. to add _id for owner field.
         data = payload.response[0]
         json_data = json.loads(data)
-        print "JSON DATA: ", data
-        # TODO: to test if _id or ObjectId
         object_id = json_data['_id']
         accounts.update({'_id': ObjectId(object_id)},
                         {'$set': {
-                            'owner': object_id,
+                            'owner': ObjectId(object_id),
                             'md5_email': md5.md5(json_data['email']).hexdigest()
                         }})
 

@@ -16,3 +16,4 @@ share
 *.db
 .DS_Store
 .idea
+docs/_build/

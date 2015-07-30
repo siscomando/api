@@ -28,3 +28,4 @@ IF_MATCH = False # CAUTION: temporally disabled. This keeps versions correclty u
 # PUBLIC_METHODS = ['GET'] # This override auth_field behavior
 # PUBLIC_ITEM_METHODS = ['GET'] # This override auth_field behavior
 # ALLOWED_ROLES = ['users'] # minimal role required.
+X_DOMAINS = '*' # You can to specify a list of domains. 

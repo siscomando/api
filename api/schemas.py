@@ -38,9 +38,45 @@ users_schema = {
 		'allowed': ['users', 'admins', 'superusers'],
 		'default': ['users'],
 	},
-	'owner': {
+	'user_id': {
 		'type': 'string',
 		'readonly': True
+	},
+	'md5_email': {
+		'type': 'string',
+		'readonly': True,
+		'default': 'empty'
+	}
+}
+me_schema = {
+	'email': {
+		'type': 'string',
+		'readonly': True,
+	},
+	'first_name': {
+		'type': 'string',
+		'maxlength': 50,
+	},
+	'last_name': {
+		'type': 'string',
+		'maxlength': 50,
+	},
+	'location': {
+		'type': 'string',
+		'maxlength': 25,
+	},
+	'username': { # See hooks
+		'type': 'string',
+		'unique': True
+	},
+	'avatar': {
+		'type': 'string'
+	},
+	'roles': {
+		'type': 'list',
+		'allowed': ['users', 'admins', 'superusers'],
+		'default': ['users'],
+		'readonly': True,
 	},
 	'md5_email': {
 		'type': 'string',
@@ -58,11 +94,15 @@ issues_schema = {
 		'type': 'string',
 		'required': True,
 	},
-	'register': {
+	'register': { # to save register_orig
 		'type': 'string',
 		'required': True,
 		'unique': True,
 		'maxlength': 50,
+	},
+	'register_orig': {
+		'type': 'string',
+		'readonly': True
 	},
 	'classifier': {
 		'type': 'integer',

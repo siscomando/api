@@ -49,7 +49,8 @@ from flask import abort
 from pymongo import MongoClient
 from bson import ObjectId
 # app
-from api.hooks import users_hooks
+from api.hooks import (users_hooks, before_returning_items_from_me,
+		before_on_insert_issue)
 import settings
 
 conn = MongoClient()
@@ -64,11 +65,7 @@ class ApiBasicAuth(BasicAuth):
 			# only retrieve a user if his roles match
 			lookup['roles'] = {'$in': allowed_roles}
 
-		print "===== allowed_roles ===== "
-		roles_is = allowed_roles if allowed_roles else "VAZIO"
-		print roles_is
 		account = accounts.find_one(lookup) # Query here
-		print account
 
 		# workaround to block empty [] roles. Temporally implementation.
 		# teorically this not needs.
@@ -100,9 +97,14 @@ if EVE_SETTINGS is None:
 						'Please to define it.')
 app = Eve(auth=ApiBasicAuth, settings=EVE_SETTINGS)
 
-# Adding hooks
+#################### Adding hooks #####################
+# hooks on_fetched_resource_me HTTP events
+#app.on_pre_GET_me += users_hooks['get_authenticated']
 app.on_pre_POST_users += users_hooks['set_username']
 app.on_post_POST_users += users_hooks['set_owner']
+# hooks on database events
+app.on_fetched_resource_me += before_returning_items_from_me
+app.on_insert_issue_super += before_on_insert_issue
 
 if __name__ == '__main__':
 	app.run(threaded=True)
