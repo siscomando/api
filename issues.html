@@ -1,0 +1,295 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Issues &mdash; SisComando RESTful API v2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'v2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SisComando RESTful API v2 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="issues">
+<h1>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h1>
+<p>Issues are an important topic or problem for debate or discussion. In the
+SisComando the issues are mainly as ticket of high severity.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><a class="reference internal" href="#list-issues"><span>List issues</span></a></li>
+<li><a class="reference internal" href="#get-more-issues"><span>Get more issues (pagination)</span></a></li>
+<li><a class="reference internal" href="#list-comments-from-issue"><span>List comments from issue</span></a></li>
+<li><a class="reference internal" href="#get-an-issue"><span>Get an issue</span></a></li>
+<li><a class="reference internal" href="#create-an-issue"><span>Create an issue</span></a></li>
+<li><a class="reference internal" href="#create-bulk-issues"><span>Create bulk issues</span></a></li>
+<li><a class="reference internal" href="#edit-an-issue"><span>Edit an issue</span></a></li>
+</ol>
+</div></blockquote>
+<div class="section" id="list-issues">
+<span id="id1"></span><h2>List issues<a class="headerlink" href="#list-issues" title="Permalink to this headline">¶</a></h2>
+<p>List all issues. Remember any requests that returns more than 25 items will be
+paginated.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="n">GET</span> <span class="o">/</span><span class="n">issues</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-more-issues-pagination">
+<span id="get-more-issues"></span><h2>Get more issues (pagination)<a class="headerlink" href="#get-more-issues-pagination" title="Permalink to this headline">¶</a></h2>
+<p>There are two ways to get more issues. First to pass <code class="docutils literal"><span class="pre">page</span></code> query parameter
+in the URL.</p>
+<div class="code highlight-python"><div class="highlight"><pre>GET /issues?page=2
+</pre></div>
+</div>
+<p>The more programmatic way is handling returned response by <a class="reference internal" href="index.html#hypermedia"><span>HATEOAS</span></a>.
+Each query done in the <span class="xref std std-ref">resource</span> that return multiples items will have
+<a class="reference internal" href="index.html#pagination"><span>Pagination</span></a> info included in the <cite>_links</cite>. You must use it to constructing
+your URL.</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;https://api.siscomando/api/v2/issues&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="s">&#39;pass&#39;</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="c"># convert json output in the python dictionary</span>
+<span class="n">following_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;_links&#39;</span><span class="p">][</span><span class="s">&#39;next&#39;</span><span class="p">][</span><span class="s">&#39;href&#39;</span><span class="p">]</span> <span class="c"># catch the link</span>
+<span class="k">print</span> <span class="s">&quot;Relative path to get more issues: &quot;</span><span class="p">,</span> <span class="n">following_link</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="list-comments-from-issue">
+<span id="id2"></span><h2>List comments from issue<a class="headerlink" href="#list-comments-from-issue" title="Permalink to this headline">¶</a></h2>
+<div class="code highlight-python"><div class="highlight"><pre>GET /issues/&lt;issue_id&gt;/comments
+</pre></div>
+</div>
+<p>TODO: In the moment this can be obtained accessing <code class="docutils literal"><span class="pre">/comments?where={&quot;issue_id:</span> <span class="pre">51f63e0838345b6dcd7eabff&quot;}</span></code></p>
+</div>
+<div class="section" id="get-an-issue">
+<span id="id3"></span><h2>Get an issue<a class="headerlink" href="#get-an-issue" title="Permalink to this headline">¶</a></h2>
+<div class="code highlight-python"><div class="highlight"><pre>GET /issues/&lt;issue_id&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-an-issue">
+<span id="id4"></span><h2>Create an issue<a class="headerlink" href="#create-an-issue" title="Permalink to this headline">¶</a></h2>
+<p>This is a task to <cite>superusers</cite> role. Therefore there is slightly difference in the
+URL (the <cite>s</cite> was suppressed).</p>
+<div class="code highlight-python"><div class="highlight"><pre>POST /issue/
+</pre></div>
+</div>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<p><cite>* Required</cite></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="14%" />
+<col width="69%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>title*</td>
+<td>string</td>
+<td>Title of the issue.</td>
+</tr>
+<tr class="row-odd"><td>body*</td>
+<td>string</td>
+<td>Details of the demand.</td>
+</tr>
+<tr class="row-even"><td>register*</td>
+<td>string</td>
+<td>ID of the issue.</td>
+</tr>
+<tr class="row-odd"><td>classifier</td>
+<td>integer</td>
+<td>Impact in the business (high, highest)</td>
+</tr>
+<tr class="row-even"><td>ugat*</td>
+<td>string</td>
+<td>Abbrev. for unit or sector for treatment</td>
+</tr>
+<tr class="row-odd"><td>ugser*</td>
+<td>string</td>
+<td>Abbrev. for unit or sector responsible</td>
+</tr>
+<tr class="row-even"><td>deadline</td>
+<td>integer</td>
+<td>Time for treatment</td>
+</tr>
+<tr class="row-odd"><td>closed</td>
+<td>boolean</td>
+<td>If closed or not</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="example-request">
+<h3>Example Request<a class="headerlink" href="#example-request" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
+<span class="go">-x POST https://api.siscomando/api/v2/issue \</span>
+<span class="go">-d &quot;title=SISCOMEX API&quot;</span>
+<span class="go">-d &quot;body=Siscomex fora do ar&quot;</span>
+<span class="go">-d &quot;register=2015RI/000012831&quot;</span>
+<span class="go">-d &quot;ugat=SUPOP&quot;</span>
+<span class="go">-d &quot;ugser=SUPGS&quot;</span>
+</pre></div>
+</div>
+<p>... return:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Thu, 30 Jul 2015 19:11:01 GMT&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;_status&quot;</span><span class="o">:</span> <span class="s2">&quot;OK&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+              <span class="s2">&quot;self&quot;</span><span class="o">:</span><span class="p">{</span>
+                        <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;issue/55ba76c5f2c3820b29360935&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;SISCOMEX API&quot;</span>
+                      <span class="p">}</span>
+            <span class="p">},</span>
+  <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Thu, 30 Jul 2015 19:11:01 GMT&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55ba76c5f2c3820b29360935&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="create-bulk-issues">
+<span id="id5"></span><h2>Create bulk issues<a class="headerlink" href="#create-bulk-issues" title="Permalink to this headline">¶</a></h2>
+<p>In order to reduce the number of loopbacks, a client might also submit multiple
+documents with a single request. All it needs to do is enclose the documents in
+a JSON list.</p>
+<div class="code highlight-python"><div class="highlight"><pre>POST /issue/
+</pre></div>
+</div>
+<div class="section" id="id6">
+<h3>Example Request<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
+<span class="go">-X POST https://api.siscomando/api/v2/issue -d &#39;[{document1}, {document2}]&#39;</span>
+</pre></div>
+</div>
+<p>When multiple documents are submitted the API takes advantage of MongoDB bulk
+insert capabilities which means that not only there’s just one single request
+traveling from the client to the remote API, but also that only one loopback
+is performed between the API server and the database. See more <a class="reference external" href="http://docs.mongodb.org/manual/core/bulk-write-operations/">Bulk Write
+Operations</a>.</p>
+</div>
+</div>
+<div class="section" id="edit-an-issue">
+<span id="id7"></span><h2>Edit an issue<a class="headerlink" href="#edit-an-issue" title="Permalink to this headline">¶</a></h2>
+<div class="code highlight-python"><div class="highlight"><pre>PATCH /issue/&lt;issue_id&gt;
+</pre></div>
+</div>
+<div class="section" id="id8">
+<h3>Example Request<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
+<span class="go">-X PATCH https://api.siscomando/api/v2/issue/55ba76c5f2c3820b29360935 \</span>
+<span class="go">-d &#39;{&quot;title&quot;: &quot;A new Title&quot;}&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Issues</a><ul>
+<li><a class="reference internal" href="#list-issues">List issues</a></li>
+<li><a class="reference internal" href="#get-more-issues-pagination">Get more issues (pagination)</a></li>
+<li><a class="reference internal" href="#list-comments-from-issue">List comments from issue</a></li>
+<li><a class="reference internal" href="#get-an-issue">Get an issue</a></li>
+<li><a class="reference internal" href="#create-an-issue">Create an issue</a><ul>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
+<li><a class="reference internal" href="#example-request">Example Request</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-bulk-issues">Create bulk issues</a><ul>
+<li><a class="reference internal" href="#id6">Example Request</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#edit-an-issue">Edit an issue</a><ul>
+<li><a class="reference internal" href="#id8">Example Request</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/issues.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Horacio Ibrahim.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/issues.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
