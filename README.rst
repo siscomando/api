@@ -6,6 +6,8 @@ The RESTful API for `SisComando WebApp <https://github.com/siscomando/webapp>`_.
 where we're using it. But you can use relational-SQL data model see
 `eve-sqlalchemy <http://eve-sqlalchemy.readthedocs.org/en/stable/>`_.
 
+See official documentation `here <http://siscomando.github.io/api/>`_.
+
 Requirements
 -------------
   * Python 2.7
