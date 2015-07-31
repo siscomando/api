@@ -96,8 +96,8 @@ register*   string    ID of the issue.
 classifier  integer   Impact in the business (high, highest)
 ugat*       string    Abbrev. for unit or sector for treatment
 ugser*      string    Abbrev. for unit or sector responsible
-deadline    integer   Time for treatment
-closed      boolean   If closed or not
+deadline    integer   Time for treatment (default: 120)
+closed      boolean   If closed or not (default: False)
 ==========  ========  =======================================
 
 Example Request

@@ -16,7 +16,8 @@ URL_PREFIX = "api"
 API_VERSION = "v2"
 
 # Feature to expand embedded documents from reference fields
-QUERY_EMBEDDED = "expanded" # Changed from embedded to expanded
+#QUERY_EMBEDDED = "expanded" # Changed from embedded to expanded. Default: embedded
+EMBEDDING = True
 
 # Scope from models. Custom properties.
 DATE_CREATED = "created_at"
@@ -28,4 +29,4 @@ IF_MATCH = False # CAUTION: temporally disabled. This keeps versions correclty u
 # PUBLIC_METHODS = ['GET'] # This override auth_field behavior
 # PUBLIC_ITEM_METHODS = ['GET'] # This override auth_field behavior
 # ALLOWED_ROLES = ['users'] # minimal role required.
-X_DOMAINS = '*' # You can to specify a list of domains. 
+X_DOMAINS = '*' # You can to specify a list of domains.

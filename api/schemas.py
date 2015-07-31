@@ -38,10 +38,6 @@ users_schema = {
 		'allowed': ['users', 'admins', 'superusers'],
 		'default': ['users'],
 	},
-	'user_id': {
-		'type': 'string',
-		'readonly': True
-	},
 	'md5_email': {
 		'type': 'string',
 		'readonly': True,
@@ -127,4 +123,51 @@ issues_schema = {
 		'default': False
 	}
 }
-comments_schema = {}
+comments_schema = {
+	# Embedded or ReferenceField
+	'issue': {
+		'type': 'objectid',
+		'data_relation': {
+			'resource': 'issues',
+			'field': '_id',
+			'embeddable': True
+		},
+	},
+	'author': {
+		'type': 'objectid',
+		'data_relation': {
+			'resource': 'users',
+			'field': '_id',
+			'embeddable': True
+		},
+		'required': True
+	},
+	# Ordinary fields
+	'shottime': {
+		'type': 'integer',
+		'default': None,
+		'nullable': True
+	},
+	'body': {
+		'type': 'string',
+		'required': True
+	},
+	'origin': {
+		'type': 'integer',
+		# Integer is better: 0: sc | 1: sccd | 2: email
+		'min': 0,
+		'max': 2,
+		'default': 0
+	},
+	# title isn't required when hashtag or issue_id exists.
+	'title': {
+		'type': 'string',
+		'maxlength': 120,
+	},
+	'mentions_users': {
+		'type': 'list',
+	},
+	'hashtags': {
+		'type': 'list',
+	}
+}

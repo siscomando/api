@@ -74,8 +74,6 @@ class UserTestCase(ApiTests):
 		r = requests.patch(self.concat(link_p), json={'first_name': 'Blue'})
 		self.assertEqual(r.status_code, 405)
 
-
-
 	def test_get_users(self):
 		""" tests if returned lists is less than 25 items. Authentication is
 		required.
@@ -86,6 +84,10 @@ class UserTestCase(ApiTests):
 		account = data[0]
 		self.assertNotIn('password', account)
 		self.assertLessEqual(len(data), 25)
+
+	def test_get_user_by_additional_lookup(self):
+		r = requests.get(self.concat('users/u'), auth=('u@user.com', '123'))
+		self.assertEqual(r.status_code, 200)
 
 	def test_get_item_users(self):
 		""" tests to get item by HATEOAS (forward links) for users results."""
@@ -483,14 +485,95 @@ class IssueTestCase(ApiTests):
 		pass
 
 
-class CommentTestCase(unittest.TestCase):
+class CommentTestCase(ApiTests):
 
 	def setUp(self):
 		number = random.randint(1, 10000)
 		self.data = {'email': 'marioissues_{}@mm.com'.format(number),
 						'password': '123', 'roles': ["users"]}
+		self.minimal_comment = {
+			'author': str(self.u),
+			'body': 'Any data for only sample. {}'.format(number),
+			# hashtag or issue_id or title
+			'title': '#SimulatedHashtag'
+		}
 
-	# tests for superusers (POST, PATCH)
+	# tests for users (POST, PATCH)
+	def test_post_comment(self):
+		""" tests create a comment and minimal fields are correct.
+		"""
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		self.assertEqual(r.status_code, 201)
+		self.assertEqual(data['author'], self.minimal_comment['author'])
+		self.assertEqual(data['body'], self.minimal_comment['body'])
+		self.assertEqual(data['title'], self.minimal_comment['title'])
+		self.assertIn('created_at', data)
+		self.assertIn('updated_at', data)
+
+	def test_get_sorting(self):
+		""" tests if comments are returned in DESC order.
+		"""
+		# add new comment
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		self.assertEqual(r.status_code, 201)
+		# get all comments
+		r = requests.get(self.concat('comments'), auth=('u@user.com', '123'))
+		data = json.loads(r.text)
+		item = data['_items'][0]
+		self.assertEqual(item['body'], self.minimal_comment['body'])
+
+	def test_embedded_or_expanded_reference(self):
+		""" tests query comment with embedded parameter.
+		"""
+		# add a minimal comment
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		# get with embedded
+		link = 'comments?embedded={"author":1}'
+		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		# check if author is expanded
+		data = json.loads(r.text)
+		item = data['_items'][0]
+		self.assertEqual(item['author']['email'], 'u@user.com')
+		self.assertIn('roles', item['author'])
+		self.assertNotIn('password', item['author'])
+
+	def test_embedded_or_expanded_reference_with_issue(self):
+		""" tests query comment with embedded parameter.
+		"""
+		number = random.randint(1, 10000)
+		register = '2015RI/000{}'.format(number + 1)
+		# adding register
+		issue = {'title': 'Sisc1', 'body':'Fora', 'register': register,
+					'ugat': 'SUPOP', 'ugser': 'SUNAF'}
+		r = requests.post(self.concat('issue'), auth=('s@super.com', '123'),
+			json=issue)
+		data = json.loads(r.text)
+		issue_id = data['_id']
+		self.minimal_comment['issue'] = issue_id
+		# add a minimal comment
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		# get with embedded
+		link = 'comments?embedded={"issue":1}'
+		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		# check if author is expanded
+		print r.text
+		data = json.loads(r.text)
+		item = data['_items'][0]
+		self.assertEqual(item['issue']['_id'], issue_id)
+		self.assertIn('body', item['issue'])
+		self.assertIn('register', item['issue'])
+		self.assertIn('ugat', item['issue'])
+		self.assertIn('ugser', item['issue'])
+
+		# get the last comments
+
+	# all fields in a post.
+	# test if default values are correct.
 
 	# tests for users (GET, PAGINATION)
 
@@ -516,7 +599,7 @@ class CommentTestCase(unittest.TestCase):
 	def test_to_link_mention(self):
 		pass
 
-	@unittest.skip(u"This test is usefeul to webapp. The flow of the Eve skip it.")
+	@unittest.skip(u"This test is useful for webapp. The flow of the Eve skip it.")
 	def test_to_json(self):
 		pass
 

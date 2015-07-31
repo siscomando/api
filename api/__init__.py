@@ -104,7 +104,7 @@ app.on_pre_POST_users += users_hooks['set_username']
 app.on_post_POST_users += users_hooks['set_owner']
 # hooks on database events
 app.on_fetched_resource_me += before_returning_items_from_me
-app.on_insert_issue_super += before_on_insert_issue
+app.on_insert_issues_super += before_on_insert_issue
 
 if __name__ == '__main__':
 	app.run(threaded=True)
