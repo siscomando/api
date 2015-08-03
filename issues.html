@@ -43,7 +43,7 @@ SisComando the issues are mainly as ticket of high severity.</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><a class="reference internal" href="#list-issues"><span>List issues</span></a></li>
-<li><span class="xref std std-ref">get-an-issue</span></li>
+<li><a class="reference internal" href="#get-an-issue"><span>Get an issue</span></a></li>
 <li><a class="reference internal" href="#get-more-issues"><span>Get more issues (pagination)</span></a></li>
 <li><a class="reference internal" href="#list-comments-from-issue"><span>List comments from issue</span></a></li>
 <li><a class="reference internal" href="#create-an-issue"><span>Create an issue</span></a></li>
@@ -123,46 +123,42 @@ paginated.</p>
         <span class="s2">&quot;page&quot;</span><span class="o">:</span> <span class="mi">1</span>
     <span class="p">}</span>
 <span class="p">}</span>
-
-<span class="p">..</span> <span class="nx">_get</span><span class="o">-</span><span class="nx">an</span><span class="o">-</span><span class="nx">issue</span><span class="o">:</span>
-
-<span class="nx">Get</span> <span class="nx">an</span> <span class="nx">issue</span>
-<span class="o">-------------</span>
-
-<span class="p">..</span> <span class="nx">code</span><span class="o">::</span>
-
-    <span class="nx">GET</span> <span class="o">/</span><span class="nx">issues</span><span class="o">/&lt;</span><span class="nx">issue_id</span><span class="o">&gt;</span>
-
-<span class="p">..</span> <span class="nx">code</span><span class="o">-</span><span class="nx">block</span><span class="o">::</span> <span class="nx">javascript</span>
-
-    <span class="p">{</span>
-        <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Problema na conex\u00e3o de... &quot;</span><span class="p">,</span>
-        <span class="s2">&quot;ugat&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPOP&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;SIORG (SUNMP)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;register_orig&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI/78642&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 24 Jul 2015 18:07:00 GMT&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;register&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI78642&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 24 Jul 2015 18:07:00 GMT&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;deadline&quot;</span><span class="o">:</span> <span class="mi">120</span><span class="p">,</span>
-        <span class="s2">&quot;closed&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
-        <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
-            <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
-                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;issues/55b2a8f4f2c3829ea0263bbb&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Issue&quot;</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;collection&quot;</span><span class="o">:</span> <span class="p">{</span>
-                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;issues&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;issues&quot;</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;parent&quot;</span><span class="o">:</span> <span class="p">{</span>
-                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;home&quot;</span>
-            <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-an-issue">
+<span id="id2"></span><h2>Get an issue<a class="headerlink" href="#get-an-issue" title="Permalink to this headline">¶</a></h2>
+<div class="code highlight-python"><div class="highlight"><pre>GET /issues/&lt;issue_id&gt;
+</pre></div>
+</div>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Problema na conex\u00e3o de... &quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ugat&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPOP&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;SIORG (SUNMP)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;register_orig&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI/78642&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 24 Jul 2015 18:07:00 GMT&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;register&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI78642&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 24 Jul 2015 18:07:00 GMT&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;deadline&quot;</span><span class="o">:</span> <span class="mi">120</span><span class="p">,</span>
+    <span class="s2">&quot;closed&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;issues/55b2a8f4f2c3829ea0263bbb&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Issue&quot;</span>
         <span class="p">},</span>
-        <span class="s2">&quot;ugser&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPDE&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55b2a8f4f2c3829ea0263bbb&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;classifier&quot;</span><span class="o">:</span> <span class="mi">0</span>
-    <span class="p">}</span>
+        <span class="s2">&quot;collection&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;issues&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;issues&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;parent&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;home&quot;</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;ugser&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPDE&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55b2a8f4f2c3829ea0263bbb&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;classifier&quot;</span><span class="o">:</span> <span class="mi">0</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -188,14 +184,14 @@ your URL.</p>
 </div>
 </div>
 <div class="section" id="list-comments-from-issue">
-<span id="id2"></span><h2>List comments from issue<a class="headerlink" href="#list-comments-from-issue" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>List comments from issue<a class="headerlink" href="#list-comments-from-issue" title="Permalink to this headline">¶</a></h2>
 <div class="code highlight-python"><div class="highlight"><pre>GET /issues/&lt;issue_id&gt;/comments
 </pre></div>
 </div>
 <p>TODO: In the moment this can be obtained accessing <code class="docutils literal"><span class="pre">/comments?where={&quot;issue_id:</span> <span class="pre">51f63e0838345b6dcd7eabff&quot;}</span></code></p>
 </div>
 <div class="section" id="create-an-issue">
-<span id="id3"></span><h2>Create an issue<a class="headerlink" href="#create-an-issue" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Create an issue<a class="headerlink" href="#create-an-issue" title="Permalink to this headline">¶</a></h2>
 <p>This is a task to <cite>superusers</cite> role. Therefore there is slightly difference in the
 URL (the <cite>s</cite> was suppressed).</p>
 <div class="code highlight-python"><div class="highlight"><pre>POST /issue/
@@ -281,15 +277,15 @@ URL (the <cite>s</cite> was suppressed).</p>
 </div>
 </div>
 <div class="section" id="create-bulk-issues">
-<span id="id4"></span><h2>Create bulk issues<a class="headerlink" href="#create-bulk-issues" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Create bulk issues<a class="headerlink" href="#create-bulk-issues" title="Permalink to this headline">¶</a></h2>
 <p>In order to reduce the number of loopbacks, a client might also submit multiple
 documents with a single request. All it needs to do is enclose the documents in
 a JSON list.</p>
 <div class="code highlight-python"><div class="highlight"><pre>POST /issue/
 </pre></div>
 </div>
-<div class="section" id="id5">
-<h3>Example Request<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Example Request<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
 <span class="go">-X POST https://api.siscomando/api/v2/issue -d &#39;[{document1}, {document2}]&#39;</span>
 </pre></div>
@@ -302,12 +298,12 @@ Operations</a>.</p>
 </div>
 </div>
 <div class="section" id="edit-an-issue">
-<span id="id6"></span><h2>Edit an issue<a class="headerlink" href="#edit-an-issue" title="Permalink to this headline">¶</a></h2>
+<span id="id7"></span><h2>Edit an issue<a class="headerlink" href="#edit-an-issue" title="Permalink to this headline">¶</a></h2>
 <div class="code highlight-python"><div class="highlight"><pre>PATCH /issue/&lt;issue_id&gt;
 </pre></div>
 </div>
-<div class="section" id="id7">
-<h3>Example Request<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Example Request<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
 <span class="go">-X PATCH https://api.siscomando/api/v2/issue/55ba76c5f2c3820b29360935 \</span>
 <span class="go">-d &#39;{&quot;title&quot;: &quot;A new Title&quot;}&#39;</span>
@@ -327,6 +323,7 @@ Operations</a>.</p>
   <ul>
 <li><a class="reference internal" href="#">Issues</a><ul>
 <li><a class="reference internal" href="#list-issues">List issues</a></li>
+<li><a class="reference internal" href="#get-an-issue">Get an issue</a></li>
 <li><a class="reference internal" href="#get-more-issues-pagination">Get more issues (pagination)</a></li>
 <li><a class="reference internal" href="#list-comments-from-issue">List comments from issue</a></li>
 <li><a class="reference internal" href="#create-an-issue">Create an issue</a><ul>
@@ -335,11 +332,11 @@ Operations</a>.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#create-bulk-issues">Create bulk issues</a><ul>
-<li><a class="reference internal" href="#id5">Example Request</a></li>
+<li><a class="reference internal" href="#id6">Example Request</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#edit-an-issue">Edit an issue</a><ul>
-<li><a class="reference internal" href="#id7">Example Request</a></li>
+<li><a class="reference internal" href="#id8">Example Request</a></li>
 </ul>
 </li>
 </ul>
