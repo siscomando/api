@@ -5,12 +5,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>&lt;no title&gt; &mdash; SisComando RESTful API v2 documentation</title>
-    
+
+    <title>Comments &mdash; SisComando RESTful API v2 documentation</title>
+
     <link rel="stylesheet" href="static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
-    
+
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -24,25 +24,195 @@
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="top" title="SisComando RESTful API v2 documentation" href="index.html" />
-   
-  
+
+
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
 
   </head>
-  <body role="document">  
+  <body role="document">
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
-            
-  
+
+  <div class="section" id="comments">
+<h1>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ol class="arabic simple">
+<li><a class="reference internal" href="#list-comments"><span>List comments</span></a></li>
+<li><a class="reference internal" href="#list-comments-expanded"><span>List comments expanded</span></a></li>
+<li><span class="xref std std-ref">get-more-comments</span></li>
+<li><span class="xref std std-ref">list-comments-by-issue</span></li>
+<li><span class="xref std std-ref">list-comments-by-hashtag</span></li>
+<li><span class="xref std std-ref">list-comments-by-user</span></li>
+<li><span class="xref std std-ref">list-comments-with-where</span></li>
+<li><span class="xref std std-ref">create-a-comment</span></li>
+<li><span class="xref std std-ref">get-a-single-comment</span></li>
+<li><span class="xref std std-ref">edit-a-comment</span></li>
+<li><span class="xref std std-ref">delete-a-comment</span></li>
+</ol>
+</div></blockquote>
+<div class="section" id="list-comments">
+<span id="id1"></span><h2>List comments<a class="headerlink" href="#list-comments" title="Permalink to this headline">¶</a></h2>
+<div class="code highlight-python"><div class="highlight"><pre>GET /comments/
+</pre></div>
+</div>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -i -u <span class="s1">&#39;u@user.com:pass&#39;</span> http://api.siscomando/api/v2/comments
+<span class="go">HTTP/1.0 200 OK</span>
+<span class="go">Content-Type: application/json</span>
+</pre></div>
+</div>
+<p>... response:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s2">&quot;_items&quot;</span><span class="o">:</span> <span class="p">[{</span>
+        <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Any data for only sample. 5871&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;origin&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;shottime&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;#SimulatedHashtag&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 19:17:42 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbc9d5f2c382190d00df05&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 19:17:42 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments/55bbc9d6f2c382189f844848&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Comment&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbc9d6f2c382189f844848&quot;</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Any data for only sample. 8791&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;origin&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;shottime&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;#SimulatedHashtag&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 19:16:21 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbc985f2c3821906141f6e&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 19:16:21 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments/55bbc985f2c382189f844847&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Comment&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbc985f2c382189f844847&quot;</span>
+    <span class="p">}],</span>
+    <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments?max_results=2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;comments&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;last&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments?max_results=2&amp;page=477&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;last page&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;parent&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;home&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;next&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments?max_results=2&amp;page=2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;next page&quot;</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;_meta&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;max_results&quot;</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;total&quot;</span><span class="o">:</span> <span class="mi">953</span><span class="p">,</span>
+        <span class="s2">&quot;page&quot;</span><span class="o">:</span> <span class="mi">1</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="list-comments-expanded">
+<span id="id2"></span><h2>List comments expanded<a class="headerlink" href="#list-comments-expanded" title="Permalink to this headline">¶</a></h2>
+<p>Each <cite>comment</cite> has <cite>author</cite> and <cite>issue</cite> (<em>optional</em>) fields. This fields
+are based in <a class="reference internal" href="users.html"><em>Users</em></a> and <a class="reference internal" href="issues.html"><em>Issues</em></a> resources. Clients can request the
+referenced resource to be <em>expanded</em> (or embdedded) within the requested document.</p>
+<p>For <cite>author</cite> expanded:</p>
+<div class="code highlight-python"><div class="highlight"><pre>GET /comments?embedded={&quot;author&quot;:1}
+</pre></div>
+</div>
+<p>...response:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s2">&quot;_items&quot;</span><span class="o">:</span> <span class="p">[{</span>
+        <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Any data for only sample. 5871&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;origin&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;shottime&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;#SimulatedHashtag&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 19:17:42 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="s1">&#39;55bbd726f2c3821a40ae9618&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span><span class="o">:</span> <span class="s1">&#39;u@user.com&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;roles&#39;</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;users&#39;</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 19:17:42 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments/55bbc9d6f2c382189f844848&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Comment&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbc9d6f2c382189f844848&quot;</span>
+    <span class="p">}</span> <span class="c1">// ... intentionally omitted</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For <cite>issue</cite> ...</p>
+<div class="code highlight-python"><div class="highlight"><pre>GET /comments?embedded={&quot;issue&quot;:1}
+</pre></div>
+</div>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s2">&quot;_items&quot;</span><span class="o">:</span> <span class="p">[{</span>
+        <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Any data for only sample. 8337&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;origin&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;shottime&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;#SimulatedHashtag&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 20:29:41 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbdab4f2c3821a8a6b5c1b&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 20:29:41 GMT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;_links&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;self&quot;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;href&quot;</span><span class="o">:</span> <span class="s2">&quot;comments/55bbdab5f2c3821a768dbff8&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Comment&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbdab5f2c3821a768dbff8&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;issue&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Fora&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ugser&quot;</span><span class="o">:</span> <span class="s2">&quot;SUNAF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;Sisc1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;register_orig&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI/0008422&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 20:29:40 GMT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ugat&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPOP&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;Fri, 31 Jul 2015 20:29:40 GMT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deadline&quot;</span><span class="o">:</span> <span class="mi">120</span><span class="p">,</span>
+            <span class="s2">&quot;closed&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55bbdab4f2c3821a768dbff7&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;classifier&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;register&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI0008422&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
 
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Comments</a><ul>
+<li><a class="reference internal" href="#list-comments">List comments</a></li>
+<li><a class="reference internal" href="#list-comments-expanded">List comments expanded</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
@@ -75,18 +245,18 @@
     </div>
     <div class="footer">
       &copy;2015, Horacio Ibrahim.
-      
+
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
-      
+
       |
       <a href="_sources/comments.txt"
           rel="nofollow">Page source</a>
     </div>
 
-    
 
-    
+
+
   </body>
 </html>
