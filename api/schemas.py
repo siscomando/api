@@ -140,13 +140,14 @@ comments_schema = {
 			'field': '_id',
 			'embeddable': True
 		},
-		'required': True
+		'readonly': True
 	},
 	# Ordinary fields
 	'shottime': {
 		'type': 'integer',
 		'default': None,
-		'nullable': True
+		'nullable': True,
+		'readonly': True
 	},
 	'body': {
 		'type': 'string',
@@ -166,8 +167,10 @@ comments_schema = {
 	},
 	'mentions_users': {
 		'type': 'list',
+		'readonly': True
 	},
 	'hashtags': {
 		'type': 'list',
+		'readonly': True
 	}
 }

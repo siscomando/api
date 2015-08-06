@@ -42,6 +42,10 @@ DOMAIN = {
     },
     'issues': {
         'url': 'issues',
+        'additional_lookup': {
+            'url': 'regex("[\w]+")',
+            'field': 'register'
+        },
         'datasource': {
             'source': 'issue',
         },
@@ -68,8 +72,8 @@ DOMAIN = {
             'source': 'comment',
             'default_sort':[('created_at', -1)]
         },
-        'cache_control': '', # account cache is not needs.
-        'cache_expires': 0,
+        #'cache_control': '', # account cache is not needs.
+        #'cache_expires': 0,
         'resource_methods': ['GET'],
         'item_methods': ['GET'],
         'schema': comments_schema,
@@ -82,8 +86,19 @@ DOMAIN = {
         },
         'cache_control': '', # account cache is not needs.
         'cache_expires': 0,
-        'resource_methods': ['GET', 'POST'],
-        'item_methods': ['GET', 'PATCH', 'DELETE'],
+        'resource_methods': ['POST'],
+        'auth_field': 'author',
+        'extra_response_fields': comments_schema.keys(),
+        'schema': comments_schema,
+    },
+    'comments_user_edit': {
+        'url': 'comments/edit',
+        'datasource': {
+            'source': 'comment'
+        },
+        'cache_control': '', # account cache is not needs.
+        'cache_expires': 0,
+        'item_methods': ['PATCH', 'DELETE'],
         'auth_field': 'author',
         'extra_response_fields': comments_schema.keys(),
         'schema': comments_schema,

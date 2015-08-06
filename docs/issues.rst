@@ -5,9 +5,9 @@ Issues are an important topic or problem for debate or discussion. In the
 SisComando the issues are mainly as ticket of high severity.
 
   #. :ref:`list-issues`
+  #. :ref:`get-an-issue`
   #. :ref:`get-more-issues`
   #. :ref:`list-comments-from-issue`
-  #. :ref:`get-an-issue`
   #. :ref:`create-an-issue`
   #. :ref:`create-bulk-issues`
   #. :ref:`edit-an-issue`
@@ -22,6 +22,123 @@ paginated.
 .. code::
 
     GET /issues
+
+...outcome:
+
+.. code-block:: javascript
+
+    {
+        "_items": [{
+            "body": "Problema na conex\u00e3o de... ",
+            "ugat": "COTEC",
+            "title": "CENTRO DE DADOS (SUPCD)",
+            "register_orig": "2015RI/16601",
+            "created_at": "Fri, 24 Jul 2015 18:07:00 GMT",
+            "register": "2015RI16601",
+            "updated_at": "Fri, 24 Jul 2015 18:07:00 GMT",
+            "deadline": 120,
+            "closed": false,
+            "_links": {
+                "self": {
+                    "href": "issues/55b2a8f4f2c3829ea0263ba7",
+                    "title": "Issue"
+                }
+            },
+            "ugser": "SUNAF",
+            "_id": "55b2a8f4f2c3829ea0263ba7",
+            "classifier": 0
+        }, {
+            "body": "Problema na conex\u00e3o de... ",
+            "ugat": "SUPOP",
+            "title": "SIORG (SUNMP)",
+            "register_orig": "2015RI/78642",
+            "created_at": "Fri, 24 Jul 2015 18:07:00 GMT",
+            "register": "2015RI78642",
+            "updated_at": "Fri, 24 Jul 2015 18:07:00 GMT",
+            "deadline": 120,
+            "closed": false,
+            "_links": {
+                "self": {
+                    "href": "issues/55b2a8f4f2c3829ea0263bbb",
+                    "title": "Issue"
+                }
+            },
+            "ugser": "SUPDE",
+            "_id": "55b2a8f4f2c3829ea0263bbb",
+            "classifier": 0
+        }],
+        "_links": {
+            "self": {
+                "href": "issues?max_results=2",
+                "title": "issues"
+            },
+            "last": {
+                "href": "issues?max_results=2&page=52",
+                "title": "last page"
+            },
+            "parent": {
+                "href": "/",
+                "title": "home"
+            },
+            "next": {
+                "href": "issues?max_results=2&page=2",
+                "title": "next page"
+            }
+        },
+        "_meta": {
+            "max_results": 2,
+            "total": 103,
+            "page": 1
+        }
+    }
+
+
+.. _get-an-issue:
+
+Get an issue
+-------------
+
+.. code::
+
+    GET /issues/<issue_id>
+
+or
+
+.. code::
+
+    GET /issues/<register>
+
+
+.. code-block:: javascript
+
+    {
+        "body": "Problema na conex\u00e3o de... ",
+        "ugat": "SUPOP",
+        "title": "SIORG (SUNMP)",
+        "register_orig": "2015RI/78642",
+        "created_at": "Fri, 24 Jul 2015 18:07:00 GMT",
+        "register": "2015RI78642",
+        "updated_at": "Fri, 24 Jul 2015 18:07:00 GMT",
+        "deadline": 120,
+        "closed": false,
+        "_links": {
+            "self": {
+                "href": "issues/55b2a8f4f2c3829ea0263bbb",
+                "title": "Issue"
+            },
+            "collection": {
+                "href": "issues",
+                "title": "issues"
+            },
+            "parent": {
+                "href": "/",
+                "title": "home"
+            }
+        },
+        "ugser": "SUPDE",
+        "_id": "55b2a8f4f2c3829ea0263bbb",
+        "classifier": 0
+    }
 
 
 .. _get-more-issues:
@@ -61,15 +178,6 @@ List comments from issue
     GET /issues/<issue_id>/comments
 
 TODO: In the moment this can be obtained accessing ``/comments?where={"issue_id: 51f63e0838345b6dcd7eabff"}``
-
-.. _get-an-issue:
-
-Get an issue
--------------
-
-.. code::
-
-    GET /issues/<issue_id>
 
 .. _create-an-issue:
 

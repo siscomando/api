@@ -50,7 +50,8 @@ from pymongo import MongoClient
 from bson import ObjectId
 # app
 from api.hooks import (users_hooks, before_returning_items_from_me,
-		before_on_insert_issue)
+		before_on_insert_issue, before_get_comments_hashtags,
+		before_on_insert_comments, post_post_comments_new)
 import settings
 
 conn = MongoClient()
@@ -100,11 +101,14 @@ app = Eve(auth=ApiBasicAuth, settings=EVE_SETTINGS)
 #################### Adding hooks #####################
 # hooks on_fetched_resource_me HTTP events
 #app.on_pre_GET_me += users_hooks['get_authenticated']
+app.on_pre_GET_comments += before_get_comments_hashtags
 app.on_pre_POST_users += users_hooks['set_username']
 app.on_post_POST_users += users_hooks['set_owner']
+app.on_post_POST_comments_user += post_post_comments_new
 # hooks on database events
 app.on_fetched_resource_me += before_returning_items_from_me
 app.on_insert_issues_super += before_on_insert_issue
+app.on_insert_comments_user += before_on_insert_comments
 
 if __name__ == '__main__':
 	app.run(threaded=True)

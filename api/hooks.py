@@ -4,12 +4,30 @@
 
 import json
 import md5
+import re
 from bson import ObjectId
 from flask import abort
 from werkzeug.security import generate_password_hash
 # app
 import api
+from utils import wrap_pattern_by_link
 
+
+def before_on_insert_comments(items):
+    """
+    The post data sent by client is plaintext because is needs to convert the
+    `#text` and `@mention` for links within body field. This function also set
+    `title` if `issue_id` not exists.
+    """
+    preg = r'(#\w+)'
+    for item in items:
+        item['hashtags'] = re.findall(preg, item['body'])
+        item['body'] = wrap_pattern_by_link(preg, item['body'])
+    # TODO: set_title
+
+def before_on_update_comments(items):
+    # TODO: set_shottime
+    pass
 
 def before_on_insert_issue(items):
     """
@@ -33,6 +51,21 @@ def before_returning_items_from_me(response):
     for k, v in output.items():
         response[k] = v
 
+def before_get_comments_hashtags(request, lookup):
+    """ Makes the filter `$in` in the hashtag `ListField`.
+    """
+    tag = request.args.get('hashtag', None)
+    u = request.args.get('u', None)
+    if tag:
+        hashtag = ''.join(['#', tag])
+        patter = re.compile(r'{}'.format(tag), flags=re.IGNORECASE)
+        lookup['hashtags'] = {'$in': [patter]}
+
+    if u:
+        local_lookup = {'username': u}
+        accounts = api.database.user
+        author = accounts.find_one(local_lookup)
+        lookup['author'] = author['_id']
 
 def pre_post_users(request):
     """Adds at the body data that was send by user's API the `username`
@@ -71,6 +104,16 @@ def post_post_users(request, payload):
                             'owner': ObjectId(object_id),
                             'md5_email': md5.md5(json_data['email']).hexdigest()
                         }})
+
+def post_post_comments_new(request, payload):
+    """ This hooks fix the returned payload after added a new comment. Because
+    the resource used to create it is `comments/new` that only is allowed to
+    access by POST. So `comments/new/55c2542df2c3823234db80a7` isn't possible.
+    This hook will return `comments/55c2542df2c3823234db80a7`.
+    """
+    # TODO: make it
+    pass
+
 
 users_hooks = {}
 users_hooks['set_username'] = pre_post_users

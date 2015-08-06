@@ -4,6 +4,7 @@ import requests
 import json
 import md5
 import random
+import re
 from pymongo import MongoClient
 from bson import ObjectId
 from werkzeug.security import generate_password_hash
@@ -86,7 +87,8 @@ class UserTestCase(ApiTests):
 		self.assertLessEqual(len(data), 25)
 
 	def test_get_user_by_additional_lookup(self):
-		r = requests.get(self.concat('users/u'), auth=('u@user.com', '123'))
+		# TODO: add an user before
+		r = requests.get(self.concat('users/annaibrahim'), auth=('u@user.com', '123'))
 		self.assertEqual(r.status_code, 200)
 
 	def test_get_item_users(self):
@@ -313,7 +315,6 @@ class UserTestCase(ApiTests):
 			auth=(self.superuser.email, '123'))
 		# Check soft delete
 		u = models.User.objects.get(email=self.payload['email'])
-		print u
 		self.assertEqual(r.status_code, 200)
 
 	# hooks tests
@@ -492,7 +493,6 @@ class CommentTestCase(ApiTests):
 		self.data = {'email': 'marioissues_{}@mm.com'.format(number),
 						'password': '123', 'roles': ["users"]}
 		self.minimal_comment = {
-			'author': str(self.u),
 			'body': 'Any data for only sample. {}'.format(number),
 			# hashtag or issue_id or title
 			'title': '#SimulatedHashtag'
@@ -506,24 +506,31 @@ class CommentTestCase(ApiTests):
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		self.assertEqual(r.status_code, 201)
-		self.assertEqual(data['author'], self.minimal_comment['author'])
+		self.assertEqual(data['author'], str(self.u))
 		self.assertEqual(data['body'], self.minimal_comment['body'])
 		self.assertEqual(data['title'], self.minimal_comment['title'])
 		self.assertIn('created_at', data)
 		self.assertIn('updated_at', data)
 
-	def test_get_sorting(self):
-		""" tests if comments are returned in DESC order.
-		"""
+	def test_post_with_hashtag(self):
 		# add new comment
+		self.minimal_comment['body'] += " #TagNew"
 		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
 			json=self.minimal_comment)
-		self.assertEqual(r.status_code, 201)
-		# get all comments
-		r = requests.get(self.concat('comments'), auth=('u@user.com', '123'))
 		data = json.loads(r.text)
-		item = data['_items'][0]
-		self.assertEqual(item['body'], self.minimal_comment['body'])
+		self.assertEqual(r.status_code, 201)
+		self.assertIn('hashtags', data)
+		self.assertEqual(len(data['hashtags']), 1)
+
+	def test_post_with_multiple_hashtag(self):
+		# add new comment
+		self.minimal_comment['body'] += " #TagNew continue #Breve"
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		self.assertEqual(r.status_code, 201)
+		self.assertIn('hashtags', data)
+		self.assertEqual(len(data['hashtags']), 2)
 
 	def test_embedded_or_expanded_reference(self):
 		""" tests query comment with embedded parameter.
@@ -552,38 +559,122 @@ class CommentTestCase(ApiTests):
 		r = requests.post(self.concat('issue'), auth=('s@super.com', '123'),
 			json=issue)
 		data = json.loads(r.text)
+		self.assertEqual(r.status_code, 201)
 		issue_id = data['_id']
 		self.minimal_comment['issue'] = issue_id
 		# add a minimal comment
 		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
 			json=self.minimal_comment)
 		# get with embedded
-		link = 'comments?embedded={"issue":1}'
+		item_id = json.loads(r.text)['_id']
+		link = 'comments/%s?embedded={"issue":1}' % item_id
 		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
 		# check if author is expanded
-		print r.text
-		data = json.loads(r.text)
-		item = data['_items'][0]
+		#print r.text
+		item = json.loads(r.text)
 		self.assertEqual(item['issue']['_id'], issue_id)
 		self.assertIn('body', item['issue'])
 		self.assertIn('register', item['issue'])
 		self.assertIn('ugat', item['issue'])
 		self.assertIn('ugser', item['issue'])
 
-		# get the last comments
+	@unittest.skip('to run alone')
+	def test_get_sorting(self):
+		""" tests if comments are returned in DESC order.
+		"""
+		# add new comment
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		self.assertEqual(r.status_code, 201)
+		# get all comments
+		r = requests.get(self.concat('comments'), auth=('u@user.com', '123'))
+		data = json.loads(r.text)
+		item = data['_items'][0]
+		self.assertEqual(item['body'], self.minimal_comment['body'])
 
-	# all fields in a post.
-	# test if default values are correct.
+	def test_get_comments_tags(self):
+		""" tests resource comments_hashtag
+		"""
+		self.minimal_comment['body'] += ' #TestHash'
+		# add comment
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		# get comment
+		r = requests.get(self.concat('comments/tags/TestHash'),
+					auth=('u@user.com', '123'))
+		print r.text
+		data = json.loads(r.text)
+		self.assertGreaterEqual(len(data['_items']), 1)
 
-	# tests for users (GET, PAGINATION)
+	def test_edit_comments(self):
+		""" tests edit a comment
+		"""
+		# adding to get _id
+		new_edited_body = "Edited body lol. It's beautiful!"
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		link = 'comments/edit/{}'.format(data['_id'])
+		self.minimal_comment['body'] = new_edited_body
+		r = requests.patch(self.concat(link), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		# Get is better
+		link = 'comments/{}'.format(data['_id'])
+		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		data = json.loads(r.text)
+		self.assertEqual(new_edited_body, data['body'])
+
+	def test_edit_comments_change_author(self):
+		""" tests if not changed author
+		"""
+		# adding to get _id
+		new_edited_body = "Edited body lol. It's beautiful!"
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		print data['author']
+		author = data['author']
+		link = 'comments/edit/{}'.format(data['_id'])
+		self.minimal_comment['body'] = new_edited_body
+		self.minimal_comment['author'] = "maluco"
+		r = requests.patch(self.concat(link), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		# author is not permitted to be edited
+		self.assertEqual(r.status_code, 422)
 
 	# tests hooks
 	def test_set_shottime(self):
 		pass
 
-	def test_set_hashtags(self):
-		pass
+	def test_set_hashtags_one_tag(self):
+		# to prevent title definition
+		del self.minimal_comment['title']
+		self.minimal_comment['body'] += " #TagNew"
+		# add new comment without title
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		self.assertIn('<a', r.text)
+		self.assertIn('</a>', r.text)
+		self.assertEqual(r.status_code, 201)
 
+	def test_set_hashtags_multiple_tag(self):
+		# to prevent title definition
+		preg1 = re.compile(r'<a(.*)>#TagNew</a>')
+		preg2 = re.compile(r'<a(.*)>#MoreTag</a>')
+		preg3 = re.compile(r'<a(.*)>#EndTag</a>')
+		del self.minimal_comment['title']
+		self.minimal_comment['body'] += " #TagNew text and #MoreTag #EndTag"
+		# add new comment without title
+		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		self.assertEqual(len(re.findall(preg1, data['body'])), 1)
+		self.assertEqual(len(re.findall(preg2, data['body'])), 1)
+		self.assertEqual(len(re.findall(preg3, data['body'])), 1)
+		self.assertEqual(r.status_code, 201)
+
+	# DELETE with auth_field is a feature of the Eve.
+	
 	def test_set_users_mentioned(self):
 		pass
 
