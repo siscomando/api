@@ -1,7 +1,13 @@
 # settings for RESTful API
 #
+import os
 from api.schemas import users_schema, issues_schema
 from api.resources import DOMAIN
+
+# It's useful for webapp, because RESTful not make uses this configuration due
+# all request are authenticated without cookies or sessions. But I using to
+# generate hashs.
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 

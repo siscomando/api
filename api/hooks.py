@@ -10,8 +10,17 @@ from flask import abort
 from werkzeug.security import generate_password_hash
 # app
 import api
-from utils import wrap_pattern_by_link
+from utils import wrap_pattern_by_link, generate_token
 
+
+def before_on_insert_users(items):
+    """
+     Creates new token for new user. `token` must be unique and not can repeated
+     as null.
+    """
+
+    for item in items:
+        item['token'] = generate_token(item['email'])
 
 def before_on_insert_comments(items):
     """

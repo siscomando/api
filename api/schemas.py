@@ -3,6 +3,22 @@
 # For me it is redundant because we already have been defined the models.py.
 #
 
+accounts_schema = {
+	'email': {
+		'type': 'string',
+		'unique': True,
+		'readonly': True
+	},
+	'password': {
+		'type': 'string',
+		'readonly': True
+	},
+	'token': {
+		'type': 'string',
+		'unique': True,
+		'readonly': True
+	}
+}
 users_schema = {
 	'email': {
 		'type': 'string',
@@ -42,6 +58,10 @@ users_schema = {
 		'type': 'string',
 		'readonly': True,
 		'default': 'empty'
+	},
+	'token': {
+		'type': 'string',
+		'readonly': True
 	}
 }
 me_schema = {

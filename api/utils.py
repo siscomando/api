@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+
+"""
+ Utils.py
+"""
+
 import re
+import hashlib
+import hmac
+import base64
+import settings
+import datetime
+import jwt
+import settings
+
+
+def generate_token(user_id):
+    secret_key = settings.SECRET_KEY
+    payload = {
+        'sub': str(user_id),
+        'iat': datetime.datetime.now()
+    }
+    encoded = jwt.encode(payload, secret_key, algorithm='HS256')
+    return base64.b64encode(encoded + ':') #
 
 def to_link_hashtag(hashtag):
     return '<a class="hashLink" eventname="hashtag-to-search" ' \

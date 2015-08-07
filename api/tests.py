@@ -4,13 +4,25 @@ import requests
 import json
 import md5
 import random
+import base64
+import datetime
 import re
 from pymongo import MongoClient
 from bson import ObjectId
 from werkzeug.security import generate_password_hash
 
+# app
+
 DATABASE = MongoClient()['dev_scdb']
 MAX_RESULTS = 25
+
+def generate_token(message):
+	payload = {
+		'u': message,
+		'at': datetime.datetime.now(),
+	}
+	# simple for tests purpose.
+	return base64.b64encode(md5.md5(bytes(payload)).hexdigest())
 
 class ApiTests(unittest.TestCase):
 
@@ -21,14 +33,25 @@ class ApiTests(unittest.TestCase):
 		# Add superuser
 		cls.s = cls.database.user.insert({'email':'s@super.com',
 		    'password': generate_password_hash('123'),
-			'roles': ["superusers"]})
+			'roles': ["superusers"],
+			'token': generate_token('s@super.com')})
 		# Add ordinary user
 		cls.u = cls.database.user.insert({'email':'u@user.com',
 					'password': generate_password_hash('123'),
-					'roles': ["users"]})
+					'roles': ["users"],
+					'token': generate_token('u@user.com')})
 		# simple join string to url
 		host = 'http://localhost:9014/api/v2/'
 		cls.concat = lambda cls, rp: "{}{}".format(host, rp) # rp = relative path
+		cls.LOGIN_URL = "http://localhost:9010/login_api/"
+		cls.get_token = lambda cls, token: base64.b64encode("{}:".format(token))
+		# get token by POST in webapp (another host)
+		def get_token_via_api(cls, identifier, password="123"):
+			r = requests.post(cls.LOGIN_URL, json={"identifier": identifier,
+				"password": password})
+			token_64 = cls.get_token(json.loads(r.text)['message']['token'])
+			return token_64
+		cls.get_token_api = get_token_via_api
 
 	@classmethod
 	def tearDownClass(cls):
@@ -43,6 +66,13 @@ class UserTestCase(ApiTests):
 		self.data = {'email': 'mariolago_{}@mm.com'.format(number),
 						'password': '123', 'roles': ["users"]}
 
+		def get_token_via_api(identifier, password="123"):
+			r = requests.post(self.LOGIN_URL, json={"identifier": identifier,
+				"password": password})
+			token_64 = self.get_token(json.loads(r.text)['message']['token'])
+			return token_64
+		self.get_token_api = get_token_via_api
+
 	def tearDown(self):
 		# TODO: delete users created in the cases.
 		pass
@@ -54,8 +84,9 @@ class UserTestCase(ApiTests):
 		r = requests.post(self.concat('users'), json=self.data)
 		self.assertEqual(r.status_code, 401)
 		# adding simple user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'), json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		data = json.loads(r.text)
 		# trying get item
 		link = 'users/{}'.format(data['_id'])
@@ -66,9 +97,10 @@ class UserTestCase(ApiTests):
 		r = requests.get(self.concat(link))
 		self.assertEqual(r.status_code, 401)
 		# patch on /me
-		r = requests.patch(self.concat(link), json={'first_name': 'Blue'})
+		# r = requests.patch(self.concat(link), json={'first_name': 'Blue'})
 		link = 'users/{}'.format(data['_id'])
-		r = requests.get(self.concat(link), auth=('s@super.com', '123'))
+		r = requests.get(self.concat(link),
+			headers={"Authorization": "Basic {}".format(token)})
 		data = json.loads(r.text)
 		self.assertNotIn('first_name', data)
 		# patch on /users
@@ -80,6 +112,10 @@ class UserTestCase(ApiTests):
 		required.
 		"""
 		r = requests.get(self.concat('users'), auth=('u@user.com', '123'))
+		self.assertEqual(r.status_code, 401)
+		token = self.get_token_api('u@user.com', '123')
+		r = requests.get(self.concat('users'),
+				headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		data = json_data['_items']
 		account = data[0]
@@ -88,18 +124,22 @@ class UserTestCase(ApiTests):
 
 	def test_get_user_by_additional_lookup(self):
 		# TODO: add an user before
-		r = requests.get(self.concat('users/annaibrahim'), auth=('u@user.com', '123'))
+		token = self.get_token_api('u@user.com', '123')
+		r = requests.get(self.concat('users/horacioibrahim'),
+				headers={"Authorization": "Basic {}".format(token)})
 		self.assertEqual(r.status_code, 200)
 
 	def test_get_item_users(self):
 		""" tests to get item by HATEOAS (forward links) for users results."""
-		r = requests.get(self.concat('users'), auth=('u@user.com', '123'))
+		token = self.get_token_api('u@user.com', '123')
+		r = requests.get(self.concat('users'),
+				headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		data = json_data['_items']
 		account = data[0]
 		hateoas_link = account['_links']['self']['href']
 		r = requests.get(self.concat(hateoas_link),
-			auth=('u@user.com', '123'))
+				headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		strip_url = hateoas_link.split('/')
 		self.assertEqual(json_data['_id'], strip_url[-1])
@@ -107,100 +147,141 @@ class UserTestCase(ApiTests):
 	def test_get_users_next_page(self):
 		""" tests if exists next_link pages.
 		"""
-		r = requests.get(self.concat('users'), auth=('u@user.com', '123'))
+		token = self.get_token_api('u@user.com', '123')
+		r = requests.get(self.concat('users'),
+				headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		links = json_data['_links']
 		next_link = links['next']['href']
 		r = requests.get(self.concat(next_link),
-			auth=('u@user.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		data = json_data['_items']
 		self.assertGreaterEqual(len(data), 1)
 
 	def test_get_users_last_page(self):
 		""" tests if exists last pages.
+		NOTE: tests that need to check pagination require more than 25 items.
 		"""
-		r = requests.get(self.concat('users'), auth=('u@user.com', '123'))
+		go_this = True # skip or not this test.
+		token = self.get_token_api('u@user.com', '123')
+		r = requests.get(self.concat('users'),
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		links = json_data['_links']
 		total = json_data['_meta']['total']
-		next_link = links['last']['href']
-		last_page = next_link.split('?')
-		last_page = last_page[-1]
-		last_page = int(last_page.split('=')[1])
-		r = requests.get(self.concat(next_link),
-			auth=('u@user.com', '123'))
-		json_data = json.loads(r.text)
-		data = json_data['_items']
-		qtd_last_page = total - ((last_page - 1) * MAX_RESULTS)
-		self.assertEqual(len(data), qtd_last_page)
+		try:
+			next_link = links['last']['href']
+		except:
+			# if has _links
+			# if has _meta and total we can make it.
+			go_this = False
+
+		if go_this:
+			last_page = next_link.split('?')
+			last_page = last_page[-1]
+			last_page = int(last_page.split('=')[1])
+			r = requests.get(self.concat(next_link),
+				headers={"Authorization": "Basic {}".format(token)})
+			json_data = json.loads(r.text)
+			data = json_data['_items']
+			qtd_last_page = total - ((last_page - 1) * MAX_RESULTS)
+			self.assertEqual(len(data), qtd_last_page)
 
 	def test_get_me(self):
 		""" Tests access in the /me """
 		# adding user with users role
-		r = requests.post(self.concat('users'), auth=('s@super.com', '123'),
+		token = self.get_token_api('s@super.com', '123')
+		r = requests.post(self.concat('users'),
+			headers={"Authorization": "Basic {}".format(token)},
 			json=self.data)
+		self.assertEqual(r.status_code, 201)
 		# recently user go to access /me
-		r = requests.get(self.concat('me'), auth=(self.data['email'], '123'))
+		token = json.loads(r.text)['token']
+		token_new = self.get_token(token)
+		r = requests.get(self.concat('me'),
+			headers={"Authorization": "Basic {}".format(token_new)})
+		#print r.text
 		data = json.loads(r.text)
 		self.assertEqual(data['email'], self.data['email'])
 
 	# PATCH tests
 	def test_patch_me(self):
-		""" tests changes in own user.
+		""" tests changes in own user by /me.
 		"""
-		""" Tests access in the /me """
 		# adding user with users role
-		r = requests.post(self.concat('users'), auth=('s@super.com', '123'),
+		token = self.get_token_api('s@super.com', '123')
+		r = requests.post(self.concat('users'),
+			headers={"Authorization": "Basic {}".format(token)},
 			json=self.data)
 		# recently user go to access /me
 		user_id = json.loads(r.text)['_id']
 		link = 'me/{}'.format(user_id)
-		r = requests.patch(self.concat(link), auth=(self.data['email'], '123'),
+		token = json.loads(r.text)['token']
+		token_new = self.get_token(token)
+		r = requests.patch(self.concat(link),
+			headers={"Authorization": "Basic {}".format(token_new)},
 			json={'first_name': 'Mario', 'last_name': 'Lago',
 				'location': 'SUPGS/GSAUD/GSIAUI', 'avatar': 'http://uol.com.br/',
 				})
-		r = requests.get(self.concat('me'), auth=(self.data['email'], '123'))
+		r = requests.get(self.concat('me'),
+			headers={"Authorization": "Basic {}".format(token_new)})
 		data = json.loads(r.text)
 		self.assertEqual(data['first_name'], 'Mario')
 
 	def test_patch_edit_another_user_by_me(self):
 		""" tests changes in own user.
 		"""
+		seed = random.randint(1, 9993242)
 		# adding user 1
-		r1 = requests.post(self.concat('users'), auth=('s@super.com', '123'),
+		token = self.get_token_api('s@super.com', '123')
+		r1 = requests.post(self.concat('users'),
+			headers={"Authorization": "Basic {}".format(token)},
 			json=self.data)
 		# adding user 2
-		r2 = requests.post(self.concat('users'), auth=('s@super.com', '123'),
-			json={'email': 'singleuser@user.com', 'password': '123',
+		r2 = requests.post(self.concat('users'),
+			headers={"Authorization": "Basic {}".format(token)},
+			json={'email': 'singleuser{}@user.com'.format(seed), 'password': '123',
 				'roles':['users']})
 		# recently user go to access /me
 		user_id = json.loads(r1.text)['_id']
 		link = 'me/{}'.format(user_id)
 		# PATCH with id from r1 and accessing by r2 user.
-		r = requests.patch(self.concat(link), auth=('singleuser@user.com', '123'),
+		token = json.loads(r2.text)['token']
+		token_new = self.get_token(token)
+		r = requests.patch(self.concat(link),
+			headers={"Authorization": "Basic {}".format(token_new)},
 			json={'first_name': 'Mario'})
 		# This must be 404 NOT FOUND
 		self.assertEqual(r.status_code, 404)
 
 	def test_patch_me_change_password(self):
-		""" tests to change password. It's not allowed."""
+		""" tests to change password. It's not allowed.
+		TODO: put this in the webapp console.
+		"""
 		# addding new user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
-				json=self.data, auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)},
+			json=self.data)
 		# editing user by other user, e.g: self.user
 		json_data = json.loads(r.text)
 		link = 'me/{}'.format(json_data['_id'])
 		# changing
+		token = json_data['token']
+		token_new = self.get_token(token)
  		r = requests.patch(self.concat(link),
- 			json={'password': '123'}, auth=(self.data['email'], '123')) # the owner
+ 			json={'password': '123'},
+			headers={"Authorization": "Basic {}".format(token_new)}) # the owner
 		self.assertEqual(r.status_code, 422)
 
 	def test_patch_users_by_superusers(self):
-		""" tests updates for users """
+		""" tests updates for users. Only own can change your data """
 		# addding new user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
-				json=self.data, auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)},
+			json=self.data)
 		# editing user by other user, e.g: self.user
 		json_data = json.loads(r.text)
 		object_id = json_data['_id']
@@ -208,13 +289,15 @@ class UserTestCase(ApiTests):
 		# Add/Editing first_name
 		self.data['first_name'] = "Mario"
  		r = requests.patch(self.concat(link),
-			json=self.data, auth=('s@super.com', '123'))
+			json=self.data,
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		self.assertEqual(r.status_code, 404)
 
 	@unittest.skip("User cannot to edit own profile #monkeyFeature")
 	def test_patch_owner(self):
-		""" tests updates for users """
+		""" tests updates for users. Only by /me is possible change self data.
+		"""
 		# addding new user
 		r = requests.post(self.concat('users'),
 				json=self.data, auth=('s@super.com', '123'))
@@ -240,8 +323,9 @@ class UserTestCase(ApiTests):
 		r = requests.post(self.concat('users'), json=self.data)
 		self.assertEqual(r.status_code, 401)
 		# With auto
+		token = self.get_token_api('u@user.com', '123')
 		r = requests.post(self.concat('users'), json=self.data,
-			auth=('u@user.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		self.assertEqual(r.status_code, 401)
 
 	@unittest.skip(u'not defined roles')
@@ -252,20 +336,23 @@ class UserTestCase(ApiTests):
 	def test_post_users_by_superusers(self):
 		""" tests adds an user with roles of the superusers """
 		# Adding the user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
-			json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)},
+			json=self.data)
+		self.assertEqual(r.status_code, 201)
 		json_data = json.loads(r.text)
 		object_id = json_data['_id']
 		new_user_follow_url = json_data['_links']['self']['href']
-		self.assertEqual(r.status_code, 201)
+		# another test to check if isn't unique
 		r = requests.post(self.concat('users'),
 			json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		self.assertEqual(r.status_code, 422) # It's not unique
 		# check if owner is updated
+		token = self.get_token_api('u@user.com', '123')
 		r = requests.get(self.concat(new_user_follow_url),
-			auth=('u@user.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		json_load = json.loads(r.text)
 		self.assertEqual(json_load['owner'], object_id)
 
@@ -273,30 +360,34 @@ class UserTestCase(ApiTests):
 	def test_delete_users_by_users(self):
 		""" trying delete an user as ordinary user """
 		# Adding an user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
-			json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)},
+			json=self.data)
 		# following links...
 		json_data = json.loads(r.text)
 		new_user_follow_url = json_data['_links']['self']['href']
 		# deleting the user as users...
+		token = json_data['token']
+		token = self.get_token(token)
 		r = requests.delete(self.concat(new_user_follow_url),
-			auth=('u@user.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		self.assertEqual(r.status_code, 401)
 
 	def test_delete_users_by_superusers(self):
 		""" to delete by superuser with SOFT_DELETE=True"""
 		# Adding an user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
-			json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)},
+			json=self.data)
 		json_data = json.loads(r.text)
 		new_user_follow_url = json_data['_links']['self']['href']
 		# Deleting the user
 		r = requests.delete(self.concat(new_user_follow_url),
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		r2 = requests.get(self.concat(new_user_follow_url),
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		self.assertEqual(r.status_code, 204)
 		self.assertEqual(r2.status_code, 404)
 
@@ -305,14 +396,15 @@ class UserTestCase(ApiTests):
 		""" to delete by superuser with SOFT_DELETE=True"""
 
 		# Adding an user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
 			data={'email':'mmmm@mm.com', 'password': '123'},
-			auth=(self.superuser.email, '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		new_user_follow_url = json_data['_links']['self']['href']
 		# Deleting the user
 		r = requests.delete(self.concat(new_user_follow_url),
-			auth=(self.superuser.email, '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		# Check soft delete
 		u = models.User.objects.get(email=self.payload['email'])
 		self.assertEqual(r.status_code, 200)
@@ -321,9 +413,10 @@ class UserTestCase(ApiTests):
 	def test_validate_email_is_not_valid(self):
 		""" tests if email is not valid """
 		# trying to add an user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'),
 			json={'email':'mmmm-mmm-m3.com', 'password': '123'},
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		self.assertEqual(r.status_code, 422)
 
 	def test_set_username(self):
@@ -331,13 +424,15 @@ class UserTestCase(ApiTests):
 		`shortname` is deprecated. It's now `username`
 		"""
 		# trying to add an user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'), json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		# checking data
 		json_data = json.loads(r.text)
 		new_user_follow_url = json_data['_links']['self']['href']
+		token = self.get_token(json_data['token'])
 		r = requests.get(self.concat(new_user_follow_url),
-			auth=('u@user.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		username_saved = json.loads(r.text)['username']
 		username_sent = self.data['email'].split('@')[0].replace('.', '')
 		self.assertEqual(username_sent, username_saved)
@@ -345,8 +440,9 @@ class UserTestCase(ApiTests):
 	def test_set_password_is_not_plain_text(self):
 		""" tests if password is not plain text """
 		# trying to add an user
+		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'), json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		pk = json_data['_id']
 		u = DATABASE.user.find_one({'_id': ObjectId(pk)})
@@ -357,13 +453,15 @@ class UserTestCase(ApiTests):
 	def test_md5_email(self):
 		""" tests if md5_email was created """
 		# trying to add an user
-		r = requests.post('http://localhost:9014/api/v2/users',
+		token = self.get_token_api('s@super.com', '123')
+		r = requests.post(self.concat('users'),
 			json=self.data,
-			auth=('s@super.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		new_user_follow_url = json_data['_links']['self']['href']
+		token = self.get_token(json_data['token'])
 		r = requests.get(self.concat(new_user_follow_url),
-			auth=('u@user.com', '123'))
+			headers={"Authorization": "Basic {}".format(token)})
 		json_data = json.loads(r.text)
 		md5_email = json_data['md5_email']
 		self.assertEqual(md5_email, md5.md5(self.data['email']).hexdigest())
@@ -386,6 +484,8 @@ class IssueTestCase(ApiTests):
 			'ugat': 'SUPOP',
 			'ugser': 'SUNAF'
 		}
+		self.user_token = self.get_token_api('u@user.com', '123')
+		self.super_token = self.get_token_api('s@super.com', '123')
 
 	def test_get_issues_not_authenticated(self):
 		r = requests.get(self.concat('issues'))
@@ -393,7 +493,9 @@ class IssueTestCase(ApiTests):
 
 	def test_get_issues(self):
 		""" tests get issues and if is list """
-		r = requests.get(self.concat('issues'), auth=('u@user.com', '123'))
+		r = requests.get(self.concat('issues'),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
+
 		data = json.loads(r.text)
 		data = data['_items']
 		self.assertEqual(r.status_code, 200)
@@ -403,14 +505,16 @@ class IssueTestCase(ApiTests):
 		"""tests get issues and if there is next the first `_items` must contain
 		25 items.
 		"""
-		r = requests.get(self.concat('issues'), auth=('u@user.com', '123'))
+		r = requests.get(self.concat('issues'),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		data = json.loads(r.text)
 		items = data['_items']
 		if 'next' in data['_links']:
 			self.assertEqual(len(items), 25)
 			# testing more pages
 			link = data['_links']['next']['href']
-			r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+			r = requests.get(self.concat(link),
+				headers={"Authorization": "Basic {}".format(self.user_token)})
 			data = json.loads(r.text)
 			items = data['_items']
 			meta = data['_meta']
@@ -427,11 +531,13 @@ class IssueTestCase(ApiTests):
 		register_orig.
 		"""
 		# adding register
-		r = requests.post(self.concat('issue'), auth=('s@super.com', '123'),
+		r = requests.post(self.concat('issue'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=self.issue)
 		data = json.loads(r.text)
 		link = 'issues/{}'.format(data['_id'])
-		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		r = requests.get(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		data = json.loads(r.text)
 		self.assertNotIn('/', data['register'])
 		self.assertEqual(self.issue['register'], data['register_orig'])
@@ -452,7 +558,8 @@ class IssueTestCase(ApiTests):
 				{'title': 'Sisc3', 'body':'Fora', 'register': reg_3,
 						'ugat': 'SUPOP', 'ugser': 'SUNAF'}
 		]
-		r = requests.post(self.concat('issue'), auth=('s@super.com', '123'),
+		r = requests.post(self.concat('issue'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=issues)
 		data = json.loads(r.text)
 		self.assertEqual(len(data['_items']), 4)
@@ -461,14 +568,17 @@ class IssueTestCase(ApiTests):
 		""" tests to update issue
 		"""
 		# adding issue
-		r = requests.post(self.concat('issue'), auth=('s@super.com', '123'),
+		r = requests.post(self.concat('issue'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=self.issue)
 		data = json.loads(r.text)
 		link = 'issue/{}'.format(data['_id'])
 		link_i = 'issues/{}'.format(data['_id'])
-		r = requests.patch(self.concat(link), auth=('s@super.com', '123'),
+		r = requests.patch(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json={'title': 'A new title'})
-		r = requests.get(self.concat(link_i), auth=('u@user.com', '123'))
+		r = requests.get(self.concat(link_i),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		data = json.loads(r.text)
 		self.assertEqual(data['title'], 'A new title')
 
@@ -498,11 +608,15 @@ class CommentTestCase(ApiTests):
 			'title': '#SimulatedHashtag'
 		}
 
+		self.user_token = self.get_token_api('u@user.com', '123')
+		self.super_token = self.get_token_api('s@super.com', '123')
+
 	# tests for users (POST, PATCH)
 	def test_post_comment(self):
 		""" tests create a comment and minimal fields are correct.
 		"""
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		self.assertEqual(r.status_code, 201)
@@ -515,7 +629,8 @@ class CommentTestCase(ApiTests):
 	def test_post_with_hashtag(self):
 		# add new comment
 		self.minimal_comment['body'] += " #TagNew"
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		self.assertEqual(r.status_code, 201)
@@ -525,7 +640,8 @@ class CommentTestCase(ApiTests):
 	def test_post_with_multiple_hashtag(self):
 		# add new comment
 		self.minimal_comment['body'] += " #TagNew continue #Breve"
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		self.assertEqual(r.status_code, 201)
@@ -536,11 +652,13 @@ class CommentTestCase(ApiTests):
 		""" tests query comment with embedded parameter.
 		"""
 		# add a minimal comment
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		# get with embedded
 		link = 'comments?embedded={"author":1}'
-		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		r = requests.get(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		# check if author is expanded
 		data = json.loads(r.text)
 		item = data['_items'][0]
@@ -556,19 +674,22 @@ class CommentTestCase(ApiTests):
 		# adding register
 		issue = {'title': 'Sisc1', 'body':'Fora', 'register': register,
 					'ugat': 'SUPOP', 'ugser': 'SUNAF'}
-		r = requests.post(self.concat('issue'), auth=('s@super.com', '123'),
+		r = requests.post(self.concat('issue'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=issue)
 		data = json.loads(r.text)
 		self.assertEqual(r.status_code, 201)
 		issue_id = data['_id']
 		self.minimal_comment['issue'] = issue_id
 		# add a minimal comment
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		# get with embedded
 		item_id = json.loads(r.text)['_id']
 		link = 'comments/%s?embedded={"issue":1}' % item_id
-		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		r = requests.get(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		# check if author is expanded
 		#print r.text
 		item = json.loads(r.text)
@@ -583,11 +704,13 @@ class CommentTestCase(ApiTests):
 		""" tests if comments are returned in DESC order.
 		"""
 		# add new comment
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		self.assertEqual(r.status_code, 201)
 		# get all comments
-		r = requests.get(self.concat('comments'), auth=('u@user.com', '123'))
+		r = requests.get(self.concat('comments'),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		data = json.loads(r.text)
 		item = data['_items'][0]
 		self.assertEqual(item['body'], self.minimal_comment['body'])
@@ -597,12 +720,12 @@ class CommentTestCase(ApiTests):
 		"""
 		self.minimal_comment['body'] += ' #TestHash'
 		# add comment
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		# get comment
-		r = requests.get(self.concat('comments/tags/TestHash'),
-					auth=('u@user.com', '123'))
-		print r.text
+		r = requests.get(self.concat('comments?hashtag=TestHash'),
+					headers={"Authorization": "Basic {}".format(self.user_token)})
 		data = json.loads(r.text)
 		self.assertGreaterEqual(len(data['_items']), 1)
 
@@ -611,16 +734,19 @@ class CommentTestCase(ApiTests):
 		"""
 		# adding to get _id
 		new_edited_body = "Edited body lol. It's beautiful!"
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		link = 'comments/edit/{}'.format(data['_id'])
 		self.minimal_comment['body'] = new_edited_body
-		r = requests.patch(self.concat(link), auth=('u@user.com', '123'),
+		r = requests.patch(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		# Get is better
 		link = 'comments/{}'.format(data['_id'])
-		r = requests.get(self.concat(link), auth=('u@user.com', '123'))
+		r = requests.get(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.user_token)})
 		data = json.loads(r.text)
 		self.assertEqual(new_edited_body, data['body'])
 
@@ -629,15 +755,16 @@ class CommentTestCase(ApiTests):
 		"""
 		# adding to get _id
 		new_edited_body = "Edited body lol. It's beautiful!"
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		data = json.loads(r.text)
-		print data['author']
 		author = data['author']
 		link = 'comments/edit/{}'.format(data['_id'])
 		self.minimal_comment['body'] = new_edited_body
 		self.minimal_comment['author'] = "maluco"
-		r = requests.patch(self.concat(link), auth=('u@user.com', '123'),
+		r = requests.patch(self.concat(link),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		# author is not permitted to be edited
 		self.assertEqual(r.status_code, 422)
@@ -651,7 +778,8 @@ class CommentTestCase(ApiTests):
 		del self.minimal_comment['title']
 		self.minimal_comment['body'] += " #TagNew"
 		# add new comment without title
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		self.assertIn('<a', r.text)
 		self.assertIn('</a>', r.text)
@@ -665,7 +793,8 @@ class CommentTestCase(ApiTests):
 		del self.minimal_comment['title']
 		self.minimal_comment['body'] += " #TagNew text and #MoreTag #EndTag"
 		# add new comment without title
-		r = requests.post(self.concat('comments/new'), auth=('u@user.com', '123'),
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		self.assertEqual(len(re.findall(preg1, data['body'])), 1)
@@ -674,7 +803,7 @@ class CommentTestCase(ApiTests):
 		self.assertEqual(r.status_code, 201)
 
 	# DELETE with auth_field is a feature of the Eve.
-	
+
 	def test_set_users_mentioned(self):
 		pass
 
