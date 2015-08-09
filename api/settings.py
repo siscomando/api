@@ -36,3 +36,5 @@ IF_MATCH = False # CAUTION: temporally disabled. This keeps versions correclty u
 # PUBLIC_ITEM_METHODS = ['GET'] # This override auth_field behavior
 # ALLOWED_ROLES = ['users'] # minimal role required.
 X_DOMAINS = '*' # You can to specify a list of domains.
+X_ALLOW_CREDENTIALS = True
+X_HEADERS = ['Authorization', 'Content-Type']
