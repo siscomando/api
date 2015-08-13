@@ -43,6 +43,7 @@ SisComando the issues are mainly as ticket of high severity.</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><a class="reference internal" href="#list-issues"><span>List issues</span></a></li>
+<li><a class="reference internal" href="#list-grouped-issues"><span>List issues group by title</span></a></li>
 <li><a class="reference internal" href="#get-an-issue"><span>Get an issue</span></a></li>
 <li><a class="reference internal" href="#get-more-issues"><span>Get more issues (pagination)</span></a></li>
 <li><a class="reference internal" href="#list-comments-from-issue"><span>List comments from issue</span></a></li>
@@ -126,6 +127,62 @@ paginated.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="list-issues-group-by-title">
+<span id="list-grouped-issues"></span><h2>List issues group by title<a class="headerlink" href="#list-issues-group-by-title" title="Permalink to this headline">¶</a></h2>
+<p>Returns all issues grouped by title where <cite>title</cite> is a system (<em>e.g: SISCOMEX</em>).
+The payload returned is a list with dictionaries containing <cite>title</cite> and <cite>issues</cite>
+(<em>e.g {&#8216;title&#8217;:&#8217;SISCOMEX&#8217;, &#8216;issues&#8217;: [{}, {}...]}</em>)</p>
+<div class="code highlight-python"><div class="highlight"><pre>GET /issues?grouped=1
+</pre></div>
+</div>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">curl -X GET -H &quot;Authorization: Basic Wlhs...zY6&quot; -H &quot;Content-Type: application/json&quot;</span>
+<span class="go">http://api.siscomando/api/v2/issues?grouped=1</span>
+</pre></div>
+</div>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+    <span class="c1">// payload omitted...</span>
+
+    <span class="s2">&quot;_grouped&quot;</span><span class="o">:</span> <span class="p">[{</span>
+            <span class="s2">&quot;issues&quot;</span><span class="o">:</span> <span class="p">[{</span>
+                    <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Problema na conexão de... &quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ugat&quot;</span><span class="o">:</span> <span class="s2">&quot;COTEC&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;55b2a8f3f2c3829ea0263b76&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;CENTRO DE DADOS (SUPCD)&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;register_orig&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI/16601&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;2015-07-24 18:07:00.769000&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;register&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI16601&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;2015-07-24 18:07:00.770000&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;classifier&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;deadline&quot;</span><span class="o">:</span> <span class="mi">120</span><span class="p">,</span>
+                    <span class="s2">&quot;_cls&quot;</span><span class="o">:</span> <span class="s2">&quot;Issue&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;closed&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+                    <span class="s2">&quot;ugser&quot;</span><span class="o">:</span> <span class="s2">&quot;SUNAF&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55b2a8f4f2c3829ea0263ba7&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;slug&quot;</span><span class="o">:</span> <span class="s2">&quot;centro de dados (supcd)-2015RI16601&quot;</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s2">&quot;body&quot;</span><span class="o">:</span> <span class="s2">&quot;Problema na conexão de... &quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ugat&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPOP&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;55b2a8f3f2c3829ea0263b76&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;CENTRO DE DADOS (SUPCD)&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;register_orig&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI/35378&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;created_at&quot;</span><span class="o">:</span> <span class="s2">&quot;2015-07-24 18:07:01.710000&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;register&quot;</span><span class="o">:</span> <span class="s2">&quot;2015RI35378&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;updated_at&quot;</span><span class="o">:</span> <span class="s2">&quot;2015-07-24 18:07:01.711000&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;classifier&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;deadline&quot;</span><span class="o">:</span> <span class="mi">120</span><span class="p">,</span>
+                    <span class="s2">&quot;_cls&quot;</span><span class="o">:</span> <span class="s2">&quot;Issue&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;closed&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+                    <span class="s2">&quot;ugser&quot;</span><span class="o">:</span> <span class="s2">&quot;SUPOP&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="s2">&quot;55b2a8f5f2c3829ea0263c33&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;slug&quot;</span><span class="o">:</span> <span class="s2">&quot;centro de dados (supcd)-2015RI35378&quot;</span>
+                <span class="p">}</span>
+            <span class="p">}],</span>
+        <span class="s2">&quot;title&quot;</span><span class="o">:</span> <span class="s2">&quot;CENTRO DE DADOS (SUPCD)&quot;</span>
+    <span class="p">}]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="get-an-issue">
 <span id="id2"></span><h2>Get an issue<a class="headerlink" href="#get-an-issue" title="Permalink to this headline">¶</a></h2>
 <div class="code highlight-python"><div class="highlight"><pre>GET /issues/&lt;issue_id&gt;
@@ -198,7 +255,7 @@ your URL.</p>
 <span id="id4"></span><h2>Create an issue<a class="headerlink" href="#create-an-issue" title="Permalink to this headline">¶</a></h2>
 <p>This is a task to <cite>superusers</cite> role. Therefore there is slightly difference in the
 URL (the <cite>s</cite> was suppressed).</p>
-<div class="code highlight-python"><div class="highlight"><pre>POST /issue/
+<div class="code highlight-python"><div class="highlight"><pre>POST /issues/
 </pre></div>
 </div>
 <div class="section" id="parameters">
@@ -255,7 +312,7 @@ URL (the <cite>s</cite> was suppressed).</p>
 <div class="section" id="example-request">
 <h3>Example Request<a class="headerlink" href="#example-request" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
-<span class="go">-x POST https://api.siscomando/api/v2/issue \</span>
+<span class="go">-x POST https://api.siscomando/api/v2/issues/new \</span>
 <span class="go">-d &quot;title=SISCOMEX API&quot;</span>
 <span class="go">-d &quot;body=Siscomex fora do ar&quot;</span>
 <span class="go">-d &quot;register=2015RI/000012831&quot;</span>
@@ -285,13 +342,13 @@ URL (the <cite>s</cite> was suppressed).</p>
 <p>In order to reduce the number of loopbacks, a client might also submit multiple
 documents with a single request. All it needs to do is enclose the documents in
 a JSON list.</p>
-<div class="code highlight-python"><div class="highlight"><pre>POST /issue/
+<div class="code highlight-python"><div class="highlight"><pre>POST /issues/
 </pre></div>
 </div>
 <div class="section" id="id6">
 <h3>Example Request<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -u <span class="s1">&#39;super@superuser.com:pass&#39;</span> <span class="se">\</span>
-<span class="go">-X POST https://api.siscomando/api/v2/issue -d &#39;[{document1}, {document2}]&#39;</span>
+<span class="go">-X POST https://api.siscomando/api/v2/issues/new -d &#39;[{document1}, {document2}]&#39;</span>
 </pre></div>
 </div>
 <p>When multiple documents are submitted the API takes advantage of MongoDB bulk
@@ -303,7 +360,7 @@ Operations</a>.</p>
 </div>
 <div class="section" id="edit-an-issue">
 <span id="id7"></span><h2>Edit an issue<a class="headerlink" href="#edit-an-issue" title="Permalink to this headline">¶</a></h2>
-<div class="code highlight-python"><div class="highlight"><pre>PATCH /issue/&lt;issue_id&gt;
+<div class="code highlight-python"><div class="highlight"><pre>PATCH /issues/&lt;issue_id&gt;
 </pre></div>
 </div>
 <div class="section" id="id8">
@@ -327,6 +384,7 @@ Operations</a>.</p>
   <ul>
 <li><a class="reference internal" href="#">Issues</a><ul>
 <li><a class="reference internal" href="#list-issues">List issues</a></li>
+<li><a class="reference internal" href="#list-issues-group-by-title">List issues group by title</a></li>
 <li><a class="reference internal" href="#get-an-issue">Get an issue</a></li>
 <li><a class="reference internal" href="#get-more-issues-pagination">Get more issues (pagination)</a></li>
 <li><a class="reference internal" href="#list-comments-from-issue">List comments from issue</a></li>
