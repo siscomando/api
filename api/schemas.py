@@ -143,6 +143,55 @@ issues_schema = {
 		'default': False
 	}
 }
+
+stars_schema = {
+	'voter': {
+		'type': 'objectid',
+		'data_relation': {
+			'resource': 'users',
+			'field': '_id',
+			'embeddable': True
+		},
+		'readonly': True # voter is captured by current user.
+	},
+	'score': {
+		'type': 'integer',
+		'default': 0,
+	},
+	'comment': {
+		'type': 'objectid',
+		'data_relation': {
+			'resource': 'comments',
+			'field': '_id',
+			'embeddable': True
+		},
+	}
+}
+
+# stand by when to migrate for MongoDB
+stars_embedded = {
+	'stars': {
+		'type': 'list',
+		'schema': {
+			'type': 'dict',
+			'schema': {
+				'voter': {
+					'type': 'objectid',
+					'data_relation': {
+						'resource': 'users',
+						'field': '_id',
+						'embeddable': True
+					}
+				},
+				'score': {
+					'type': 'integer',
+					'default': 0,
+				},
+			}
+		}
+	}
+}
+
 comments_schema = {
 	# Embedded or ReferenceField
 	'issue': {
@@ -152,6 +201,16 @@ comments_schema = {
 			'field': '_id',
 			'embeddable': True
 		},
+		'nullable': True
+	},
+	'register': {
+		'type': 'string',
+		'data_relation': {
+			'resource': 'issues',
+			'field': 'register',
+			'embeddable': True
+		},
+		'nullable': True
 	},
 	'author': {
 		'type': 'objectid',
@@ -159,6 +218,20 @@ comments_schema = {
 			'resource': 'users',
 			'field': '_id',
 			'embeddable': True
+		},
+		'readonly': True
+	},
+	# 'stars': this is inject by hooks
+	# TODO: expand sublevels as voter.
+	'stars': {
+		'type': 'list',
+		'schema': {
+			'type': 'objectid',
+			'data_relation': {
+				'resource': 'stars',
+				'field': '_id',
+				'embeddable': True
+			}
 		},
 		'readonly': True
 	},

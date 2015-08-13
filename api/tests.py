@@ -87,6 +87,7 @@ class UserTestCase(ApiTests):
 		token = self.get_token_api('s@super.com', '123')
 		r = requests.post(self.concat('users'), json=self.data,
 			headers={"Authorization": "Basic {}".format(token)})
+		self.assertEqual(r.status_code, 201)
 		data = json.loads(r.text)
 		# trying get item
 		link = 'users/{}'.format(data['_id'])
@@ -531,13 +532,14 @@ class IssueTestCase(ApiTests):
 		register_orig.
 		"""
 		# adding register
-		r = requests.post(self.concat('issue'),
+		r = requests.post(self.concat('issues'),
 			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=self.issue)
 		data = json.loads(r.text)
 		link = 'issues/{}'.format(data['_id'])
 		r = requests.get(self.concat(link),
 			headers={"Authorization": "Basic {}".format(self.user_token)})
+
 		data = json.loads(r.text)
 		self.assertNotIn('/', data['register'])
 		self.assertEqual(self.issue['register'], data['register_orig'])
@@ -558,7 +560,7 @@ class IssueTestCase(ApiTests):
 				{'title': 'Sisc3', 'body':'Fora', 'register': reg_3,
 						'ugat': 'SUPOP', 'ugser': 'SUNAF'}
 		]
-		r = requests.post(self.concat('issue'),
+		r = requests.post(self.concat('issues'),
 			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=issues)
 		data = json.loads(r.text)
@@ -568,19 +570,32 @@ class IssueTestCase(ApiTests):
 		""" tests to update issue
 		"""
 		# adding issue
-		r = requests.post(self.concat('issue'),
+		r = requests.post(self.concat('issues'),
 			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=self.issue)
+		self.assertEqual(r.status_code, 201)
 		data = json.loads(r.text)
-		link = 'issue/{}'.format(data['_id'])
-		link_i = 'issues/{}'.format(data['_id'])
+		link = 'issues/{}'.format(data['_id'])
+
 		r = requests.patch(self.concat(link),
 			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json={'title': 'A new title'})
-		r = requests.get(self.concat(link_i),
+		self.assertEqual(r.status_code, 200)
+
+		r = requests.get(self.concat(link),
 			headers={"Authorization": "Basic {}".format(self.user_token)})
+		self.assertEqual(r.status_code, 200)
+
 		data = json.loads(r.text)
 		self.assertEqual(data['title'], 'A new title')
+
+	def test_get_with_grouped(self):
+		r = requests.get(self.concat('issues?grouped=1&max_results=1'),
+		    headers={"Authorization": "Basic {}".format(self.super_token)})
+		self.assertEqual(200, r.status_code)
+		data = json.loads(r.text)
+		self.assertIsInstance(data['_grouped'], list)
+		self.assertEqual(len(data['_grouped'][0].keys()), 2)
 
 	def test_update_and_create_not_superusers(self):
 		# TODO
@@ -620,9 +635,9 @@ class CommentTestCase(ApiTests):
 			json=self.minimal_comment)
 		data = json.loads(r.text)
 		self.assertEqual(r.status_code, 201)
-		self.assertEqual(data['author'], str(self.u))
+		self.assertEqual(data['author']['_id'], str(self.u))
 		self.assertEqual(data['body'], self.minimal_comment['body'])
-		self.assertEqual(data['title'], self.minimal_comment['title'])
+		self.assertEqual(data['title'], 'no subject')
 		self.assertIn('created_at', data)
 		self.assertIn('updated_at', data)
 
@@ -674,7 +689,7 @@ class CommentTestCase(ApiTests):
 		# adding register
 		issue = {'title': 'Sisc1', 'body':'Fora', 'register': register,
 					'ugat': 'SUPOP', 'ugser': 'SUNAF'}
-		r = requests.post(self.concat('issue'),
+		r = requests.post(self.concat('issues'),
 			headers={"Authorization": "Basic {}".format(self.super_token)},
 			json=issue)
 		data = json.loads(r.text)
@@ -770,9 +785,41 @@ class CommentTestCase(ApiTests):
 		self.assertEqual(r.status_code, 422)
 
 	# tests hooks
-	def test_set_shottime(self):
-		pass
+	def test_set_shottime_without_issue_or_register(self):
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		hour = "".join([str(datetime.datetime.now().hour), 'h'])
+		self.assertEqual(hour, data['shottime'])
 
+	def test_set_shottime_with_issue_or_register(self):
+		# add and issue
+		number = random.randint(1, 10000)
+		reg_1 = '2015RI/000{}'.format(number + 1)
+		# adding register
+		issue = {'title': 'Sisc1',
+				'body':'Fora',
+				'register': reg_1,
+				'ugat': 'SUPOP',
+				'ugser': 'SUNAF'
+		}
+		r = requests.post(self.concat('issues'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
+			json=issue)
+		self.assertEqual(r.status_code, 201)
+		issue = json.loads(r.text)
+		# edit minimal_comment
+		self.minimal_comment['issue'] = issue['_id']
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		shottime = int(data['shottime'])
+		self.assertTrue(isinstance(shottime, int))
+		self.assertLessEqual(shottime, 2)
+
+	@unittest.skip("waiting define if a or sc-link")
 	def test_set_hashtags_one_tag(self):
 		# to prevent title definition
 		del self.minimal_comment['title']
@@ -781,10 +828,11 @@ class CommentTestCase(ApiTests):
 		r = requests.post(self.concat('comments/new'),
 			headers={"Authorization": "Basic {}".format(self.user_token)},
 			json=self.minimal_comment)
-		self.assertIn('<a', r.text)
+		self.assertIn('<a', r.text) # sc-link
 		self.assertIn('</a>', r.text)
 		self.assertEqual(r.status_code, 201)
 
+	@unittest.skip(u'waiting define if a or sc-link')
 	def test_set_hashtags_multiple_tag(self):
 		# to prevent title definition
 		preg1 = re.compile(r'<a(.*)>#TagNew</a>')
@@ -807,8 +855,70 @@ class CommentTestCase(ApiTests):
 	def test_set_users_mentioned(self):
 		pass
 
-	def test_set_title(self):
-		pass
+	def test_set_title_with_hashtag(self):
+		""" when creating a comment with hashtag but without issue_id the
+		first hashtag must be the title.
+		"""
+		# create an issue.
+		number = random.randint(1, 10000)
+		reg_1 = '2015RI/000{}'.format(number + 1)
+		# adding register
+		issue = {'title': 'Sisc1',
+				'body':'Fora',
+				'register': reg_1,
+				'ugat': 'SUPOP',
+				'ugser': 'SUNAF'
+		}
+		r = requests.post(self.concat('issues'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
+			json=issue)
+		self.assertEqual(r.status_code, 201)
+		# create an comment with hashtag in body but without issue or register.
+		del self.minimal_comment['title'] # surely that title wasn't posted.
+		self.minimal_comment['body'] += " #TestHashNew"
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
+			json=self.minimal_comment)
+		data = json.loads(r.text)
+		self.assertEqual(data['title'], "#TestHashNew")
+
+	def test_set_title_with_register(self):
+		""" tests if title of comment is equal from register.
+		"""
+		# create an issue.
+		number = random.randint(1, 10000)
+		reg_1 = '2015RI/000{}'.format(number + 1)
+
+		# adding register
+		issue = {'title': 'SISC ISSUE VALID',
+				'body':'Fora',
+				'register': reg_1,
+				'ugat': 'SUPOP',
+				'ugser': 'SUNAF'
+		}
+
+		# adding an valid issue
+		r = requests.post(self.concat('issues'),
+			headers={"Authorization": "Basic {}".format(self.super_token)},
+			json=issue)
+		self.assertEqual(r.status_code, 201)
+
+		# surely that title wasn't posted.
+		del self.minimal_comment['title']
+
+		# adding issue `_id` for comment.
+		self.minimal_comment['issue'] = json.loads(r.text)['_id']
+
+		# creating the comment with issue.
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
+			json=self.minimal_comment)
+		self.assertEqual(r.status_code, 201) # fail fast
+
+		data = json.loads(r.text)
+		register = issue['register'].replace('/', '')
+		# title of comment must be equal from register.
+		self.assertEqual(data['title'], issue['title'])
 
 	def test_post_save(self):
 		pass
@@ -822,6 +932,43 @@ class CommentTestCase(ApiTests):
 	@unittest.skip(u"This test is useful for webapp. The flow of the Eve skip it.")
 	def test_to_json(self):
 		pass
+
+class StarsTestCase(ApiTests):
+
+	def setUp(self):
+		number = random.randint(1, 10000)
+		self.data = {'email': 'marioissues_{}@mm.com'.format(number),
+						'password': '123', 'roles': ["users"]}
+
+		self.user_token = self.get_token_api('u@user.com', '123')
+		self.super_token = self.get_token_api('s@super.com', '123')
+
+		self.minimal_comment = {
+			'body': 'Any data for only sample. {}'.format(number),
+			# hashtag or issue_id or title
+			'title': '#SimulatedHashtag'
+		}
+		# create a comment
+		r = requests.post(self.concat('comments/new'),
+			headers={"Authorization": "Basic {}".format(self.user_token)},
+			json=self.minimal_comment)
+		self.comment_created = json.loads(r.text)
+
+
+	def test_create_stars(self):
+		"""
+		tests if can to post/votes in stars
+		"""
+		data_stars = {
+			'comment': self.comment_created['_id'],
+			'score': 2
+		}
+		r = requests.post(self.concat('stars/new'),
+		 	headers={"Authorization": "Basic {}".format(self.user_token)},
+			json=data_stars
+		)
+		self.assertEqual(r.status_code, 201)
+
 
 class InviteTestCase(unittest.TestCase):
 	""" Invite is `yet` a case for `only` webapp. """

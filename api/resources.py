@@ -6,7 +6,7 @@ from flask import abort
 from eve.auth import BasicAuth
 import api
 from api.schemas import (users_schema, me_schema, issues_schema, comments_schema,
-        accounts_schema)
+        accounts_schema, stars_schema)
 
 
 class ApiBasicAuth(BasicAuth):
@@ -104,22 +104,24 @@ DOMAIN = {
         'datasource': {
             'source': 'issue',
         },
-        'resource_methods': ['GET'],
-        'item_methods': ['GET'],
+        'resource_methods': ['GET', 'POST'],
+        'item_methods': ['GET', 'PATCH', 'DELETE'],
+        'allowed_item_write_roles': ['superusers'],
+        'allowed_write_roles': ['superusers'],
         'allowed_read_roles': ['users', 'superusers', 'admins'],
         'schema': issues_schema,
         'cache_control': '', # account cache is not needs.
         'cache_expires': 0,
     },
-    'issues_super': {
-        'url': 'issue',
+    'issues_super': { # TODO to find this reference issues_super (and issues/new)
+        'url': 'issues/new',
         'datasource': {
             'source': 'issue',
         },
         'resource_methods': ['POST'],
         'item_methods': ['PATCH'],
         'allowed_read_roles': ['superusers'],
-        'schema': issues_schema,
+        'schema': issues_schema
     },
     'comments': {
         'url': 'comments',
@@ -134,7 +136,7 @@ DOMAIN = {
         'schema': comments_schema,
         'embedding': True
     },
-    'comments_user': {
+    'comments_user': { # created to support auth_field
         'url': 'comments/new',
         'datasource': {
             'source': 'comment'
@@ -146,7 +148,7 @@ DOMAIN = {
         'extra_response_fields': comments_schema.keys(),
         'schema': comments_schema,
     },
-    'comments_user_edit': {
+    'comments_user_edit': { # created only to coherence url.
         'url': 'comments/edit',
         'datasource': {
             'source': 'comment'
@@ -157,5 +159,28 @@ DOMAIN = {
         'auth_field': 'author',
         'extra_response_fields': comments_schema.keys(),
         'schema': comments_schema,
-    }
+    },
+    'stars' : {
+        'datasource': {
+            'source': 'stars',
+        },
+        'cache_control': '', # account cache is not needs.
+        'cache_expires': 0,
+        'url': 'stars',
+        'resource_methods': ['GET'],
+        'item_methods': ['GET'],
+        'schema': stars_schema
+    },
+    'stars_user' : { # create to support auth_field
+        'datasource': {
+            'source': 'stars',
+        },
+        'cache_control': '', # account cache is not needs.
+        'cache_expires': 0,
+        'url': 'stars/new',
+        'resource_methods': ['POST'],
+        'auth_field': 'voter',
+        'extra_response_fields': stars_schema.keys(),
+        'schema': stars_schema
+    },
 }

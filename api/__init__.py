@@ -46,7 +46,10 @@ from bson import ObjectId
 # app
 from api.hooks import (users_hooks, before_returning_items_from_me,
 		before_on_insert_issue, before_get_comments_hashtags,
-		before_on_insert_comments, post_post_comments_new, before_on_insert_users)
+		before_on_insert_comments, post_post_comments_new, before_on_insert_users,
+		after_inserted_stars_user, on_post_get_issues_with_grouped,
+		before_get_comments_search, before_get_users_search
+	)
 import settings
 
 conn = MongoClient()
@@ -99,14 +102,22 @@ app = Eve(auth=ApiTokenAuth, settings=EVE_SETTINGS)
 # hooks on_fetched_resource_me HTTP events
 #app.on_pre_GET_me += users_hooks['get_authenticated']
 app.on_pre_GET_comments += before_get_comments_hashtags
+app.on_pre_GET_comments += before_get_comments_search
+app.on_pre_GET_users += before_get_users_search
 app.on_pre_POST_users += users_hooks['set_username']
 app.on_post_POST_users += users_hooks['set_owner']
 app.on_post_POST_comments_user += post_post_comments_new
+
+# test this implementation:
+app.on_post_GET_issues += on_post_get_issues_with_grouped
+
 # hooks on database events
 app.on_fetched_resource_me += before_returning_items_from_me
-app.on_insert_issues_super += before_on_insert_issue
-app.on_insert_comments_user += before_on_insert_comments
+# app.on_fetched_resource_comments += after_fetched_comments
+app.on_insert_issues += before_on_insert_issue
+app.on_insert_comments_user += before_on_insert_comments # pre
 app.on_insert_users += before_on_insert_users
+app.on_inserted_stars_user += after_inserted_stars_user
 
 if __name__ == '__main__':
 	app.run(threaded=True)

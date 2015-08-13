@@ -5,12 +5,14 @@ Issues are an important topic or problem for debate or discussion. In the
 SisComando the issues are mainly as ticket of high severity.
 
   #. :ref:`list-issues`
+  #. :ref:`list-grouped-issues`
   #. :ref:`get-an-issue`
   #. :ref:`get-more-issues`
   #. :ref:`list-comments-from-issue`
   #. :ref:`create-an-issue`
   #. :ref:`create-bulk-issues`
   #. :ref:`edit-an-issue`
+
 
 .. _list-issues:
 
@@ -90,6 +92,67 @@ paginated.
             "total": 103,
             "page": 1
         }
+    }
+
+.. _list-grouped-issues:
+
+List issues group by title
+---------------------------
+Returns all issues grouped by title where `title` is a system (*e.g: SISCOMEX*).
+The payload returned is a list with dictionaries containing `title` and `issues`
+(*e.g {'title':'SISCOMEX', 'issues': [{}, {}...]}*)
+
+.. code::
+
+     GET /issues?grouped=1
+
+.. code-block:: console
+
+    curl -X GET -H "Authorization: Basic Wlhs...zY6" -H "Content-Type: application/json"
+    http://api.siscomando/api/v2/issues?grouped=1
+
+.. code-block:: javascript
+
+    {
+        // payload omitted...
+
+        "_grouped": [{
+                "issues": [{
+                        "body": "Problema na conexão de... ",
+                        "ugat": "COTEC",
+                        "author": "55b2a8f3f2c3829ea0263b76",
+                        "title": "CENTRO DE DADOS (SUPCD)",
+                        "register_orig": "2015RI/16601",
+                        "created_at": "2015-07-24 18:07:00.769000",
+                        "register": "2015RI16601",
+                        "updated_at": "2015-07-24 18:07:00.770000",
+                        "classifier": 0,
+                        "deadline": 120,
+                        "_cls": "Issue",
+                        "closed": false,
+                        "ugser": "SUNAF",
+                        "_id": "55b2a8f4f2c3829ea0263ba7",
+                        "slug": "centro de dados (supcd)-2015RI16601"
+                    }, {
+                        "body": "Problema na conexão de... ",
+                        "ugat": "SUPOP",
+                        "author": "55b2a8f3f2c3829ea0263b76",
+                        "title": "CENTRO DE DADOS (SUPCD)",
+                        "register_orig": "2015RI/35378",
+                        "created_at": "2015-07-24 18:07:01.710000",
+                        "register": "2015RI35378",
+                        "updated_at": "2015-07-24 18:07:01.711000",
+                        "classifier": 0,
+                        "deadline": 120,
+                        "_cls": "Issue",
+                        "closed": false,
+                        "ugser": "SUPOP",
+                        "_id": "55b2a8f5f2c3829ea0263c33",
+                        "slug": "centro de dados (supcd)-2015RI35378"
+                    }
+                }],
+            "title": "CENTRO DE DADOS (SUPCD)"
+        }]
     }
 
 
@@ -188,7 +251,7 @@ URL (the `s` was suppressed).
 
 .. code::
 
-    POST /issue/
+    POST /issues/
 
 Parameters
 ^^^^^^^^^^
@@ -214,7 +277,7 @@ Example Request
 .. code-block:: console
 
     $ curl -H "Content-Type: application/json" -u 'super@superuser.com:pass' \
-    -x POST https://api.siscomando/api/v2/issue \
+    -x POST https://api.siscomando/api/v2/issues/new \
     -d "title=SISCOMEX API"
     -d "body=Siscomex fora do ar"
     -d "register=2015RI/000012831"
@@ -248,7 +311,7 @@ a JSON list.
 
 .. code::
 
-    POST /issue/
+    POST /issues/
 
 Example Request
 ^^^^^^^^^^^^^^^^
@@ -256,7 +319,7 @@ Example Request
 .. code-block:: console
 
     $ curl -H "Content-Type: application/json" -u 'super@superuser.com:pass' \
-    -X POST https://api.siscomando/api/v2/issue -d '[{document1}, {document2}]'
+    -X POST https://api.siscomando/api/v2/issues/new -d '[{document1}, {document2}]'
 
 
 When multiple documents are submitted the API takes advantage of MongoDB bulk
@@ -272,7 +335,7 @@ Edit an issue
 
 .. code::
 
-    PATCH /issue/<issue_id>
+    PATCH /issues/<issue_id>
 
 Example Request
 ^^^^^^^^^^^^^^^^

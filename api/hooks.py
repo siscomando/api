@@ -2,16 +2,30 @@
 # are raised by API.
 # See: http://python-eve.org/features.html#eventhooks
 
+import datetime
 import json
 import md5
 import re
 from bson import ObjectId
-from flask import abort
+from flask import abort, g
 from werkzeug.security import generate_password_hash
 # app
 import api
-from utils import wrap_pattern_by_link, generate_token
+from utils import wrap_pattern_by_link, generate_token, JSONEncoder
 
+
+
+def after_inserted_stars_user(items):
+    """ Updates the comment defined in the star's vote.
+    """
+    comments = api.database.comment
+    for item in items:
+        comment_id = item['comment']
+        pkid = item['_id']
+        # update real comment with stars _id
+        comments.update({'_id': comment_id},
+                {'$push': {'stars': pkid}}
+        )
 
 def before_on_insert_users(items):
     """
@@ -29,10 +43,33 @@ def before_on_insert_comments(items):
     `title` if `issue_id` not exists.
     """
     preg = r'(#\w+)'
+
     for item in items:
         item['hashtags'] = re.findall(preg, item['body'])
         item['body'] = wrap_pattern_by_link(preg, item['body'])
-    # TODO: set_title
+
+        if 'issue' not in item and 'register' in item and item['register']:
+            issue = api.database.issue.find_one({'register': item['register']})
+            item['issue'] = issue['_id']
+        elif 'issue' in item and 'register' not in item:
+            # issue already is within item
+            issue = api.database.issue.find_one({'_id': item['issue']})
+        else:
+            issue = None
+
+        if issue:
+            item['title'] = issue['title']
+        elif len(item['hashtags']) > 0:
+            item['title'] = item['hashtags'][0] # TODO: this could be improved
+        else:
+            item['title'] = 'no subject'
+
+        if 'issue' in item and item['issue']:
+            deltatime = datetime.datetime.utcnow() - issue['created_at']
+            item['shottime'] = str(int(deltatime.total_seconds() / 60))
+        else:
+            item['shottime'] = str(datetime.datetime.today().hour) + 'h'
+
 
 def before_on_update_comments(items):
     # TODO: set_shottime
@@ -76,6 +113,15 @@ def before_get_comments_hashtags(request, lookup):
         author = accounts.find_one(local_lookup)
         lookup['author'] = author['_id']
 
+def before_get_comments_search(request, lookup):
+    """ Adds $text lookup if parameter search found. This feature only work
+    with users and comments.
+    """
+    search = request.args.get('search', None)
+    if search:
+        term = {'$search': search}
+        lookup['$text'] = term
+
 def pre_post_users(request):
     """Adds at the body data that was send by user's API the `username`
     field. The username is the localpart from email address."""
@@ -114,14 +160,63 @@ def post_post_users(request, payload):
                             'md5_email': md5.md5(json_data['email']).hexdigest()
                         }})
 
-def post_post_comments_new(request, payload):
-    """ This hooks fix the returned payload after added a new comment. Because
-    the resource used to create it is `comments/new` that only is allowed to
-    access by POST. So `comments/new/55c2542df2c3823234db80a7` isn't possible.
-    This hook will return `comments/55c2542df2c3823234db80a7`.
+def before_get_users_search(request, lookup):
+    """ Adds $regex lookup if parameter search found. This feature only work
+    with users and comments.
     """
-    # TODO: make it
-    pass
+    search = request.args.get('search', None)
+    if search:
+        if search.startswith('@'):
+            search = search.replace('@', '')
+        regx = re.compile(search, re.IGNORECASE)
+        lookup['username'] = regx
+
+def post_post_comments_new(request, response):
+    """ This hooks fix the returned payload after added a new comment. Because
+    the resource used to create has the `comments/new` url. It's only allowed to
+    access by POST. Soon isn't possible to make GET in the url built to way
+    `comments/<new>/55c2542df2c3823234db80a7`.
+
+    So changes are (samples):
+
+    _links.self.href
+    from:
+        `comments/new/55c2542df2c3823234db80a7`.
+    to:
+        `comments/55c2542df2c3823234db80a7`
+
+    author
+    from:
+        author: 55b2a943f2c3829eae4b732f
+    to:
+        author: {username: "username" ... }
+
+    """
+
+    if response.status_code == 201:
+        data = json.loads(response.data)
+        domain = api.resources.DOMAIN # get url of the comments resource.
+
+        if 'author' in data and data['author']:
+            lookup = {"_id": ObjectId(data['author'])}
+            accounts = api.database.user
+            author = accounts.find_one(lookup)
+            data['author'] = author
+            data['_links']['self']['href'] = "".join([domain['comments']['url'], '/', data['_id']])
+            response.data = JSONEncoder().encode(data)
+
+def on_post_get_issues_with_grouped(request, response):
+    grouped = request.args.get('grouped', None)
+
+    if grouped and int(grouped) == 1 and response.status_code == 200:
+        reducer = "function(obj, prev){prev.issues.push(obj)}"
+        # TODO: get only open issues... condition
+        # TODO: get with MAX_RESULTS
+        grouped_payload = api.database.issue.group(['title'], None,
+                            {'issues':[]}, reducer)
+        data = json.loads(response.data)
+        data[u'_grouped'] = grouped_payload
+        response.data = JSONEncoder().encode(data)
 
 
 users_hooks = {}
