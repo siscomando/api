@@ -16,7 +16,7 @@ share
 *.db
 .DS_Store
 .idea
-docs/_buildi/
+docs/_build/
 .coverage
 api/.coverage
 api/cover/
