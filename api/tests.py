@@ -58,7 +58,8 @@ class ApiTests(unittest.TestCase):
 		cls.database.user.remove({'_id': cls.s});
 		cls.database.user.remove({'_id': cls.u});
 
-
+#class GeneralTests(unittest.TestCase):
+    
 class UserTestCase(ApiTests):
 
 	def setUp(self):
